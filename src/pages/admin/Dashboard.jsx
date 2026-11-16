@@ -6,8 +6,10 @@ import { CHART_COLORS } from '../../lib/charts';
 import { fetchActivity, fetchAnalytics, fetchAttention } from '../../services/eventService';
 import { pluralize } from '../../utils/formatters';
 import RelativeTime from '../../components/common/RelativeTime';
-import { EmptyState, PageHeader, Skeleton, StatCard, Tabs } from '../../components/ui/kit';
-import { useState } from 'react';
+import { Badge, EmptyState, PageHeader, Skeleton, StatCard, Tabs } from '../../components/ui/kit';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useToast } from '../../components/ui/Toast';
 
 const RANGES = [
   { id: '30', label: 'Last 30 days' },
@@ -17,6 +19,10 @@ const RANGES = [
 
 const AdminDashboard = () => {
   const [range, setRange] = useState('90');
+  const [params, setParams] = useSearchParams();
+  const { push } = useToast();
+  useEffect(() => { const value = params.get('range'); if (['30', '90', '365'].includes(value)) setRange(value); }, [params]);
+  const changeRange = (value) => { setRange(value); setParams((current) => { current.set('range', value); return current; }); };
   const analytics = useQuery({ queryKey: ['analytics', range], queryFn: () => fetchAnalytics(range) });
   const attention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention });
   const activity = useQuery({ queryKey: ['activity'], queryFn: fetchActivity });
@@ -24,7 +30,7 @@ const AdminDashboard = () => {
 
   return (
     <AppLayout role="admin">
-      <PageHeader title="Dashboard" actions={<Tabs tabs={RANGES} value={range} onChange={setRange} label="Date range" />} />
+      <PageHeader title="Dashboard" actions={<Tabs tabs={RANGES} value={range} onChange={changeRange} label="Date range" />} />
       {analytics.isLoading ? <Skeleton /> : analytics.error ? <EmptyState title="Could not load the dashboard" action={<button type="button" className="btn" onClick={() => analytics.refetch()}>Retry</button>} /> : (
         <div className="section-gap">
           <div className="stat-grid">
@@ -76,8 +82,8 @@ const AdminDashboard = () => {
           </section>
           <section className="card">
             <h2>Needs attention</h2>
-            {(attention.data || []).length === 0 ? <EmptyState title="Nothing needs attention" /> : (attention.data || []).map((event) => (
-              <p key={event.id}>{event.title} · {event.registered_count}/{event.capacity}</p>
+            {(attention.data || []).length === 0 ? <EmptyState title="Nothing needs attention" /> : (attention.data || []).map((item) => (
+              <div className="attention-row" key={item.id}><div><Badge status={item.severity}>{item.severity}</Badge><p>{item.message}</p></div><button type="button" className="btn btn-ghost" onClick={() => push({ title: `${item.action} queued` })}>{item.action}</button></div>
             ))}
           </section>
           <section className="card">

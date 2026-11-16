@@ -7,6 +7,7 @@ import RelativeTime from '../../components/common/RelativeTime';
 import { featureFlagsSchema, tenantSettingsSchema } from '../../lib/schemas';
 import { fetchConfigVersions, fetchTenants, rollbackConfig, saveConfig } from '../../services/platformService';
 import { useUiStore } from '../../stores/uiStore';
+import { diffJson, summarizeDiff } from '../../utils/configDiff';
 
 const ConfigEditor = () => {
   const tenantId = useUiStore((state) => state.clientId);
@@ -58,6 +59,9 @@ const ConfigEditor = () => {
   };
 
   const currentText = tenant ? JSON.stringify({ settings: tenant.settings, feature_flags: tenant.feature_flags }, null, 2) : '';
+  const proposed = tab === 'json' ? (() => { try { return JSON.parse(json); } catch { return null; } })() : draft;
+  const changes = proposed ? diffJson(JSON.parse(currentText), proposed) : [];
+  const diffSummary = summarizeDiff(changes);
 
   return (
     <AppLayout role="fde">
@@ -97,7 +101,8 @@ const ConfigEditor = () => {
           )}
           <label htmlFor="change-note">Change note</label>
           <input id="change-note" value={note} onChange={(event) => setNote(event.target.value)} />
-          <button type="button" className="btn" disabled={!note.trim() || save.isPending} onClick={() => snapshot() && setConfirm(true)}>Review changes</button>
+          <button type="button" className="btn" disabled={!note.trim() || save.isPending || changes.length === 0} onClick={() => snapshot() && setConfirm(true)}>Review changes</button>
+          {changes.length === 0 && <p className="muted">No changes to save.</p>}
           <h2>Versions</h2>
           {(versions.data || []).map((version) => (
             <article key={version.version} className="card">
@@ -112,8 +117,8 @@ const ConfigEditor = () => {
         </>
       )}
       <Modal open={confirm} title="Save config version?" onClose={() => setConfirm(false)} wide>
-        <pre className="mono">{currentText}</pre>
-        <pre className="mono">{tab === 'json' ? json : JSON.stringify(draft, null, 2)}</pre>
+        <p>{diffSummary.changed} changed, {diffSummary.added} added, {diffSummary.removed} removed</p>
+        <div className="diff-grid"><pre className="mono diff-removed">{currentText}</pre><pre className="mono diff-added">{tab === 'json' ? json : JSON.stringify(draft, null, 2)}</pre></div>
         <button type="button" className="btn" disabled={save.isPending} onClick={() => save.mutate(snapshot())}>{save.isPending ? 'Saving...' : 'Save version'}</button>
       </Modal>
       <ConfirmDialog open={Boolean(restore)} title="Restore this version?" body="The current settings will be replaced." confirmLabel="Restore" onClose={() => setRestore(null)} onConfirm={async () => { await rollbackConfig(tenantId, restore.version); setRestore(null); await queryClient.invalidateQueries({ queryKey: ['tenants'] }); push({ title: 'Version restored' }); }} />

@@ -3,6 +3,7 @@ import { isSupabaseConfigured, useMock } from '../lib/env';
 import { inDashboardRange } from '../lib/range';
 import { supabase } from '../lib/supabaseClient';
 import * as store from '../mock/store';
+import { buildAttentionItems } from '../utils/attentionRules';
 
 function sessionUser() {
   try {
@@ -194,13 +195,8 @@ export async function fetchActivity() {
 
 export async function fetchAttention() {
   const events = await fetchEvents();
-  return events.filter((event) => {
-    if (event.status === 'cancelled' || event.status === 'draft') return false;
-    const capacity = event.capacity || 0;
-    if (!capacity) return false;
-    const ratio = (event.registered_count || 0) / capacity;
-    return ratio < 0.4 || (event.registered_count || 0) >= capacity;
-  });
+  const people = live() ? [] : store.listPeople(sessionUser()?.tenant_id);
+  return buildAttentionItems(events, people);
 }
 
 export async function fetchScopedAnalytics(tenantId) {

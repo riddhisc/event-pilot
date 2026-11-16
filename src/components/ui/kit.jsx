@@ -1,16 +1,20 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X } from 'lucide-react';
+import Breadcrumbs from '../common/Breadcrumbs';
+import { getRouteCrumbs } from '../../lib/routeMetadata';
 
-export function IconButton({ label, children, className = '', ...props }) {
+export const IconButton = forwardRef(function IconButton({ label, children, className = '', ...props }, ref) {
   return (
-    <button type="button" className={`icon-button ${className}`} aria-label={label} {...props}>
+    <button ref={ref} type="button" className={`icon-button ${className}`} aria-label={label} {...props}>
       {children}
     </button>
   );
-}
+});
 
 export function PageHeader({ title, eyebrow, actions, crumbs = [] }) {
+  const location = useLocation();
+  const resolvedCrumbs = crumbs.length > 0 ? crumbs : getRouteCrumbs(location.pathname);
   useEffect(() => {
     document.title = title ? `${title} · EventBuddy` : 'EventBuddy';
   }, [title]);
@@ -18,15 +22,8 @@ export function PageHeader({ title, eyebrow, actions, crumbs = [] }) {
   return (
     <header className="page-header">
       <div>
-        {crumbs.length > 0 && (
-          <nav className="breadcrumbs" aria-label="Breadcrumb">
-            {crumbs.map((crumb, index) => (
-              <span key={crumb.label}>
-                {index > 0 && <span aria-hidden="true"> / </span>}
-                {crumb.to ? <Link to={crumb.to}>{crumb.label}</Link> : <span>{crumb.label}</span>}
-              </span>
-            ))}
-          </nav>
+        {resolvedCrumbs.length > 0 && (
+          <Breadcrumbs items={resolvedCrumbs} />
         )}
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h1>{title}</h1>

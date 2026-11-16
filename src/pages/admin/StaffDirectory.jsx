@@ -4,7 +4,8 @@ import AppLayout from '../../components/common/AppLayout';
 import { Avatar, Badge, DataTable, Modal, PageHeader, Skeleton } from '../../components/ui/kit';
 import { useToast } from '../../components/ui/Toast';
 import { fetchStaff, updateStaffStatus } from '../../services/eventService';
-import { previewInvites, resendInvite } from '../../services/platformService';
+import { previewInvites, previewStaffImport, resendInvite } from '../../services/platformService';
+import { inviteSummary, validateInviteRows } from '../../utils/inviteValidator';
 
 const StaffDirectory = () => {
   const queryClient = useQueryClient();
@@ -15,12 +16,14 @@ const StaffDirectory = () => {
   const [role, setRole] = useState('staff');
   const [department, setDepartment] = useState('Engineering');
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState('emails');
   const preview = previewInvites(emails);
+  const csvRows = mode === 'csv' ? validateInviteRows(previewStaffImport(emails), { existingEmails: (staff.data || []).map((person) => person.email), departments: [...new Set((staff.data || []).map((person) => person.department).filter(Boolean))] }) : [];
   const rows = (staff.data || []).filter((person) => person.role !== 'fde');
 
   const send = async () => {
     setBusy(true);
-    const valid = preview.filter((row) => !row.error);
+    const valid = mode === 'csv' ? csvRows.filter((row) => row.valid).map((row) => ({ email: row.email })) : preview.filter((row) => !row.error);
     for (const row of valid) await resendInvite(row.email);
     setBusy(false);
     setOpen(false);
@@ -55,8 +58,9 @@ const StaffDirectory = () => {
         />
       )}
       <Modal open={open} title="Invite staff" onClose={() => setOpen(false)}>
-        <label htmlFor="invite-emails">Emails or CSV</label>
-        <textarea id="invite-emails" rows="5" value={emails} onChange={(event) => setEmails(event.target.value)} placeholder={'one@northwind.example\ntwo@northwind.example'} />
+        <Tabs tabs={[{ id: 'emails', label: 'Emails' }, { id: 'csv', label: 'CSV upload' }]} value={mode} onChange={setMode} label="Invite method" />
+        <label htmlFor="invite-emails">{mode === 'csv' ? 'CSV preview' : 'Emails'}</label>
+        <textarea id="invite-emails" rows="5" value={emails} onChange={(event) => setEmails(event.target.value)} placeholder={mode === 'csv' ? 'name,email,role,department\nAda Lovelace,ada@example.com,staff,Engineering' : 'one@northwind.example\ntwo@northwind.example'} />
         <label htmlFor="invite-role">Role</label>
         <select id="invite-role" value={role} onChange={(event) => setRole(event.target.value)}>
           <option value="staff">Staff</option>
@@ -64,12 +68,12 @@ const StaffDirectory = () => {
         </select>
         <label htmlFor="invite-dept">Department</label>
         <input id="invite-dept" value={department} onChange={(event) => setDepartment(event.target.value)} />
-        {preview.length > 0 && (
+        {mode === 'csv' ? <p className="muted">{JSON.stringify(inviteSummary(csvRows))} · {csvRows.filter((row) => !row.valid).map((row) => `Row ${row.row}: ${row.errors.join(', ')}`).join(' · ')}</p> : preview.length > 0 && (
           <ul>
             {preview.map((row) => <li key={row.email}>{row.email} {row.error && <span className="error-message">{row.error}</span>}</li>)}
           </ul>
         )}
-        <button type="button" className="btn" disabled={busy || preview.every((row) => row.error)} onClick={send}>{busy ? 'Sending...' : `Send ${role} invites`}</button>
+        <button type="button" className="btn" disabled={busy || (mode === 'csv' ? !csvRows.some((row) => row.valid) : preview.every((row) => row.error))} onClick={send}>{busy ? 'Sending...' : `Send ${role} invites`}</button>
       </Modal>
     </AppLayout>
   );

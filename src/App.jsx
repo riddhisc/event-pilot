@@ -58,6 +58,7 @@ function App() {
                   <Route path="/staff/networking" element={<ProtectedRoute allowedRole="staff"><Networking /></ProtectedRoute>} />
 
                   <Route path="/fde" element={<ProtectedRoute allowedRole="fde"><Clients /></ProtectedRoute>} />
+                  <Route path="/fde/onboarding" element={<ProtectedRoute allowedRole="fde"><Onboarding /></ProtectedRoute>} />
                   <Route path="/fde/onboarding/:tenantId" element={<ProtectedRoute allowedRole="fde"><Onboarding /></ProtectedRoute>} />
                   <Route path="/fde/integrations" element={<ProtectedRoute allowedRole="fde"><Integrations /></ProtectedRoute>} />
                   <Route path="/fde/config" element={<ProtectedRoute allowedRole="fde"><ConfigEditor /></ProtectedRoute>} />

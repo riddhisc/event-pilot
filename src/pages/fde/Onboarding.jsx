@@ -6,9 +6,12 @@ import { Badge, EmptyState, PageHeader, Progress, Skeleton } from '../../compone
 import { useToast } from '../../components/ui/Toast';
 import RelativeTime from '../../components/common/RelativeTime';
 import { completeOnboardingTask, fetchOnboarding, fetchTenants, previewStaffImport } from '../../services/platformService';
+import { useUiStore } from '../../stores/uiStore';
 
 const Onboarding = () => {
-  const { tenantId } = useParams();
+  const { tenantId: routeTenantId } = useParams();
+  const selectedTenantId = useUiStore((state) => state.clientId);
+  const tenantId = routeTenantId || selectedTenantId;
   const queryClient = useQueryClient();
   const { push } = useToast();
   const tenants = useQuery({ queryKey: ['tenants'], queryFn: fetchTenants });

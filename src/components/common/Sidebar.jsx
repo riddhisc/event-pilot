@@ -44,14 +44,11 @@ const LINKS = {
 
 const Sidebar = ({ type = 'staff' }) => {
   const open = useUiStore((state) => state.sidebarOpen);
-  const clientId = useUiStore((state) => state.clientId);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
   useEffect(() => {
     if (window.innerWidth < 801) setSidebarOpen(false);
   }, [setSidebarOpen]);
-  const links = (LINKS[type] || LINKS.staff).map((link) => (
-    link.to === '/fde/onboarding' ? { ...link, to: `/fde/onboarding/${clientId}` } : link
-  ));
+  const links = LINKS[type] || LINKS.staff;
 
   return (
     <aside className={`sidebar ${open ? 'open' : 'closed'}`}>

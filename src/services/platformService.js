@@ -103,7 +103,9 @@ export async function replayWebhook(id) {
     if (error) throw error;
     return data;
   }
+  const delivery = store.listDeliveries().find((item) => item.id === id);
   store.replayDelivery(id);
+  if (delivery) store.addAudit({ tenant_id: delivery.tenant_id, actor: 'Finn Deployed', action: 'webhook.replay', entity: 'webhook_deliveries', entity_id: id });
   return { status_code: 200 };
 }
 
@@ -139,7 +141,7 @@ export function previewStaffImport(csv) {
 
 export async function fetchSyncRuns(integrationId) {
   if (live()) return [];
-  return store.listSyncRuns(integrationId);
+  return store.listSyncRuns(integrationId).slice(0, 20);
 }
 
 export async function fetchAdoptionTrend(tenantId) {
@@ -180,7 +182,9 @@ export async function rollbackConfig(tenantId, version) {
     if (error) throw error;
     return match;
   }
-  return store.rollbackConfig(tenantId, version);
+  const match = store.listConfigVersions(tenantId).find((item) => item.version === version);
+  if (!match) throw new Error('Version not found');
+  return store.pushConfigVersion(tenantId, match.snapshot, { note: `Restored from v${version}`, author: 'Finn Deployed' });
 }
 
 export async function impersonateUser(user) {
