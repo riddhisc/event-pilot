@@ -1,57 +1,43 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import LoginForm from '../../components/auth/LoginForm';
+import { useAuth } from '../../hooks/useAuth';
+import { homeFor } from '../../lib/roles';
 
 const Login = () => {
-  const [activePanel, setActivePanel] = useState('staff');
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleLoginSuccess = (user) => {
-    if (user.role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/staff/dashboard');
-    }
-  };
+  const [email, setEmail] = useState('');
+  useEffect(() => {
+    document.title = 'Sign in · EventBuddy';
+  }, []);
 
   return (
     <div className="login-page">
+      <div className="brand-blush">
       <div className="login-container">
         <div className="logo-section">
-          <img src="/logo.svg" alt="EventBuddy Logo" />
-          <h1>EventBuddy</h1>
-          <p>Office Event Tracker</p>
+          <img src="/logo.svg" alt="" width="56" height="56" />
+          <p className="eyebrow">EventBuddy</p>
+          <h1>Welcome back</h1>
+          <p>Sign in with your work email. Your account already knows whether you are staff, an admin, or an FDE.</p>
         </div>
-        
-        <div className="login-tabs">
-          <button 
-            className={activePanel === 'staff' ? 'active' : ''}
-            onClick={() => setActivePanel('staff')}
-          >
-            Staff Login
-          </button>
-          <button 
-            className={activePanel === 'admin' ? 'active' : ''}
-            onClick={() => setActivePanel('admin')}
-          >
-            Admin Login
-          </button>
-        </div>
-        
-        <div className="login-panel">
-          <LoginForm 
-            role={activePanel} 
-            onLoginSuccess={handleLoginSuccess}
-            login={login}
-          />
-        </div>
-        
-        <div className="login-footer">
-          <a href="/reset-password">Forgot Password?</a>
-        </div>
+        <LoginForm
+          email={email}
+          onEmailChange={setEmail}
+          login={login}
+          onLoginSuccess={(user) => navigate(homeFor(user))}
+        />
+        <p className="login-footer">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
       </div>
+      </div>
+      <aside className="brand-red" aria-hidden="true">
+        <div className="mark-tile">
+          <img src="/logo.svg" alt="" />
+        </div>
+      </aside>
     </div>
   );
 };

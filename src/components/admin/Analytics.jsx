@@ -1,30 +1,24 @@
-import React from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-const Analytics = ({ data }) => {
-  return (
-    <div className="analytics-card">
-      <h2>Event Participation Rates</h2>
+const Analytics = ({ data = [] }) => (
+  <section className="card">
+    <h2>Participation</h2>
+    {data.length === 0 ? <p>No participation data yet.</p> : (
       <div className="chart-container">
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="invites" fill="#8884d8" name="Invited" />
-            <Bar dataKey="attendees" fill="#82ca9d" name="Attended" />
+            <Bar dataKey="invites" name="Capacity" fill="#4F46E5" />
+            <Bar dataKey="attendees" name="Registered" fill="#0EA5E9" />
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
-  );
-};
+    )}
+  </section>
+);
 
 export default Analytics;

@@ -1,60 +1,99 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { login, logout, verifyToken } from '../services/authService';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { login as loginRequest, logout as logoutRequest, restoreSession, writeSession } from '../services/authService';
+import { endImpersonation, impersonateUser } from '../services/platformService';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
+
+const ACTOR_KEY = 'eventbuddy.actor';
+const IMPERSONATION_KEY = 'eventbuddy.impersonation';
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [impersonation, setImpersonation] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(IMPERSONATION_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const userData = await verifyToken(token);
-          setCurrentUser(userData);
-        } catch (err) {
-          localStorage.removeItem('token');
-          setError('Session expired. Please login again.');
-        }
-      }
-      setLoading(false);
+    let active = true;
+    restoreSession()
+      .then((user) => {
+        if (!active) return;
+        setCurrentUser(user);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Session expired. Please login again.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    checkAuth();
   }, []);
 
-  const handleLogin = async (credentials) => {
-    setLoading(true);
-    try {
-      const { token, user } = await login(credentials);
-      localStorage.setItem('token', token);
-      setCurrentUser(user);
-      setError(null);
-      return user;
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const login = useCallback(async (credentials) => {
+    setError(null);
+    const user = await loginRequest(credentials);
+    if (user) setCurrentUser(user);
+    return user;
+  }, []);
 
-  const handleLogout = () => {
-    logout();
-    localStorage.removeItem('token');
+  const logout = useCallback(async () => {
+    await logoutRequest();
+    sessionStorage.removeItem(ACTOR_KEY);
+    sessionStorage.removeItem(IMPERSONATION_KEY);
+    setImpersonation(null);
     setCurrentUser(null);
-  };
+  }, []);
 
-  const value = {
+  const startImpersonation = useCallback(async (target, reason, minutes = 15) => {
+    if (!currentUser || currentUser.role !== 'fde') {
+      throw new Error('Only an FDE can impersonate.');
+    }
+    const trimmed = String(reason || '').trim();
+    if (!trimmed) throw new Error('A reason is required before impersonation.');
+    const result = await impersonateUser({ ...target, reason: trimmed, minutes });
+    const banner = {
+      ...result,
+      name: target.name,
+      email: target.email,
+    };
+    sessionStorage.setItem(ACTOR_KEY, JSON.stringify(currentUser));
+    sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(banner));
+    writeSession(target);
+    setImpersonation(banner);
+    setCurrentUser(target);
+    return banner;
+  }, [currentUser]);
+
+  const stopImpersonation = useCallback(async () => {
+    const actor = JSON.parse(sessionStorage.getItem(ACTOR_KEY) || 'null');
+    await endImpersonation(currentUser);
+    sessionStorage.removeItem(ACTOR_KEY);
+    sessionStorage.removeItem(IMPERSONATION_KEY);
+    setImpersonation(null);
+    if (actor) {
+      writeSession(actor);
+      setCurrentUser(actor);
+    }
+  }, [currentUser]);
+
+  const value = useMemo(() => ({
     currentUser,
     loading,
     error,
-    login: handleLogin,
-    logout: handleLogout,
-  };
+    impersonation,
+    login,
+    logout,
+    startImpersonation,
+    stopImpersonation,
+  }), [currentUser, loading, error, impersonation, login, logout, startImpersonation, stopImpersonation]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

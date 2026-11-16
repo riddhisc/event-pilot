@@ -1,16 +1,39 @@
-export const formatDateTime = (dateString, timeString) => {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  
-  if (timeString) {
-    const [hours, minutes] = timeString.split(':');
-    date.setHours(parseInt(hours, 10));
-    date.setMinutes(parseInt(minutes, 10));
-  }
-  
-  return date;
-};
+function toDate(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatDate(value, locale) {
+  const date = toDate(value);
+  if (!date) return '';
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
+}
+
+export function formatDateTime(value, locale) {
+  const date = toDate(value);
+  if (!date) return '';
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+export function formatRelative(value, now = new Date(), locale) {
+  const date = toDate(value);
+  if (!date) return '';
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const seconds = Math.round((date.getTime() - now.getTime()) / 1000);
+  const abs = Math.abs(seconds);
+  const units = [
+    ['year', 60 * 60 * 24 * 365],
+    ['month', 60 * 60 * 24 * 30],
+    ['week', 60 * 60 * 24 * 7],
+    ['day', 60 * 60 * 24],
+    ['hour', 60 * 60],
+    ['minute', 60],
+  ];
+  const match = units.find(([, size]) => abs >= size);
+  const [unit, size] = match || ['second', 1];
+  return formatter.format(Math.round(seconds / size), unit);
+}
 
 export const isUpcoming = (dateString) => {
   const today = new Date();

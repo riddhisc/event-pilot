@@ -1,27 +1,21 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { homeFor } from '../lib/roles';
 
 const NotFound = () => {
   const { currentUser } = useAuth();
-  
-  const getDashboardLink = () => {
-    if (!currentUser) return '/login';
-    return currentUser.role === 'admin' ? '/admin/dashboard' : '/staff/dashboard';
-  };
-  
+  useEffect(() => {
+    document.title = 'Page not found · EventBuddy';
+  }, []);
   return (
-    <div className="not-found-page">
-      <div className="not-found-container">
-        <h1>404</h1>
-        <h2>Page Not Found</h2>
-        <p>The page you're looking for doesn't exist or has been moved.</p>
-        
-        <Link to={getDashboardLink()} className="return-link">
-          Return to {currentUser ? 'Dashboard' : 'Login'}
-        </Link>
+    <main className="login-page">
+      <div className="login-container">
+        <h1>Page not found</h1>
+        <p>That address is not part of EventBuddy.</p>
+        <Link className="btn" to={homeFor(currentUser)}>Back home</Link>
       </div>
-    </div>
+    </main>
   );
 };
 

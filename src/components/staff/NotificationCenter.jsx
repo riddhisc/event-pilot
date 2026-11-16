@@ -1,37 +1,26 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { Bell } from 'lucide-react';
+import { useNotifications } from '../../hooks/useNotifications';
+import RelativeTime from '../common/RelativeTime';
+import { EmptyState } from '../ui/kit';
 
 const NotificationCenter = () => {
-  const [notifications, setNotifications] = useState([]);
-
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await axios.get("/api/notifications");
-        setNotifications(response.data);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
+  const { notifications, error, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-md">
-      <h2 className="text-lg font-bold mb-3">Notifications</h2>
-      {notifications.length === 0 ? (
-        <p>No new notifications</p>
-      ) : (
-        <ul>
-          {notifications.map((notification) => (
-            <li key={notification.id} className="border-b p-2">
-              {notification.message} - <span className="text-gray-500">{notification.date}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <section className="card" aria-label="Notifications">
+      <div className="page-header">
+        <h2>Notifications</h2>
+        <button type="button" className="btn btn-ghost" onClick={markAllAsRead}>Mark all read</button>
+      </div>
+      {error && <p className="error-message" role="alert">{error}</p>}
+      {notifications.length === 0 ? <EmptyState title="No notifications" body="Reminders and RSVP updates will show up here." /> : notifications.map((notification) => (
+        <article key={notification.id} className="event-card">
+          <p><Bell size={14} aria-hidden="true" /> {notification.message} {!notification.read && <span className="badge badge-info">Unread</span>}</p>
+          <RelativeTime value={notification.createdAt} />
+          {!notification.read && <button type="button" className="btn btn-ghost" onClick={() => markAsRead(notification.id)}>Mark read</button>}
+        </article>
+      ))}
+    </section>
   );
 };
 

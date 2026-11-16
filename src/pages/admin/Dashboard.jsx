@@ -1,97 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import { fetchAnalytics } from '../../services/eventService';
-import Navbar from '../../components/common/Navbar';
-import Sidebar from '../../components/common/Sidebar';
-import Analytics from '../../components/admin/Analytics';
-import ParticipantList from '../../components/admin/ParticipantList';
-import StaffEngagement from '../../components/admin/StaffEngagement';
-import FeedbackReport from '../../components/admin/FeedbackReport';
-import Loader from '../../components/common/Loader';
+import { CalendarDays, TrendingUp, UserRound, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts';
+import AppLayout from '../../components/common/AppLayout';
+import { CHART_COLORS } from '../../lib/charts';
+import { fetchActivity, fetchAnalytics, fetchAttention } from '../../services/eventService';
+import { pluralize } from '../../utils/formatters';
+import RelativeTime from '../../components/common/RelativeTime';
+import { EmptyState, PageHeader, Skeleton, StatCard, Tabs } from '../../components/ui/kit';
+import { useState } from 'react';
+
+const RANGES = [
+  { id: '30', label: 'Last 30 days' },
+  { id: '90', label: 'Last 90 days' },
+  { id: '365', label: 'Last 12 months' },
+];
 
 const AdminDashboard = () => {
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const loadAnalytics = async () => {
-      try {
-        const data = await fetchAnalytics();
-        setAnalytics(data);
-      } catch (err) {
-        setError('Failed to load analytics data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAnalytics();
-  }, []);
-
-  if (loading) return <Loader />;
-
-  if (error) {
-    return (
-      <div className="admin-layout">
-        <Navbar />
-        <div className="layout-container">
-          <Sidebar type="admin" />
-          <main className="dashboard-content">
-            <div className="error-container">
-              <h2>Error</h2>
-              <p>{error}</p>
-              <button onClick={() => window.location.reload()}>Retry</button>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+  const [range, setRange] = useState('90');
+  const analytics = useQuery({ queryKey: ['analytics', range], queryFn: () => fetchAnalytics(range) });
+  const attention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention });
+  const activity = useQuery({ queryKey: ['activity'], queryFn: fetchActivity });
+  const data = analytics.data;
 
   return (
-    <div className="admin-layout">
-      <Navbar />
-      <div className="layout-container">
-        <Sidebar type="admin" />
-        <main className="dashboard-content">
-          <h1>Admin Dashboard</h1>
-          
-          <div className="dashboard-summary">
-            <div className="summary-card">
-              <h3>Total Events</h3>
-              <div className="summary-value">{analytics.totalEvents}</div>
-            </div>
-            <div className="summary-card">
-              <h3>Upcoming Events</h3>
-              <div className="summary-value">{analytics.upcomingEvents}</div>
-            </div>
-            <div className="summary-card">
-              <h3>Total Staff</h3>
-              <div className="summary-value">{analytics.totalStaff}</div>
-            </div>
-            <div className="summary-card">
-              <h3>Average Participation</h3>
-              <div className="summary-value">{analytics.avgParticipation}%</div>
-            </div>
+    <AppLayout role="admin">
+      <PageHeader title="Dashboard" actions={<Tabs tabs={RANGES} value={range} onChange={setRange} label="Date range" />} />
+      {analytics.isLoading ? <Skeleton /> : analytics.error ? <EmptyState title="Could not load the dashboard" action={<button type="button" className="btn" onClick={() => analytics.refetch()}>Retry</button>} /> : (
+        <div className="section-gap">
+          <div className="stat-grid">
+            <StatCard icon={<CalendarDays size={18} />} label="Total events" value={data.totalEvents} trend={pluralize(data.totalEvents, 'event')} />
+            <StatCard icon={<TrendingUp size={18} />} label="Upcoming" value={data.upcomingEvents} trend={pluralize(data.upcomingEvents, 'event')} />
+            <StatCard icon={<Users size={18} />} label="Total staff" value={data.totalStaff} trend={pluralize(data.totalStaff, 'person', 'people')} />
+            <StatCard icon={<UserRound size={18} />} label="Avg participation" value={`${data.avgParticipation}%`} trend="Registered vs capacity" />
           </div>
-          
-          <div className="dashboard-grid">
-            <div className="dashboard-section">
-              <Analytics data={analytics.participationData} />
-            </div>
-            <div className="dashboard-section">
-              <StaffEngagement data={analytics.engagementData} />
-            </div>
-            <div className="dashboard-section">
-              <ParticipantList data={analytics.recentParticipants} />
-            </div>
-            <div className="dashboard-section">
-              <FeedbackReport data={analytics.feedbackData} />
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+          <section className="card">
+            <h2>Participation</h2>
+            <p className="chart-note">Registered versus capacity by month.</p>
+            {(data.participationData || []).length === 0 ? <EmptyState title="No participation in this range" /> : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={data.participationData}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="invites" name="Capacity" fill={CHART_COLORS[0]} />
+                  <Bar dataKey="attendees" name="Registered" fill={CHART_COLORS[1]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </section>
+          <section className="card">
+            <h2>Engagement by department</h2>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={[...(data.engagementData || [])].sort((a, b) => b.engagementScore - a.engagementScore)} layout="vertical">
+                <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} label={{ value: 'Percent', position: 'insideBottom', offset: -2 }} />
+                <YAxis type="category" dataKey="date" width={110} />
+                <Tooltip formatter={(value) => [`${value}%`, 'Engagement']} />
+                <Bar dataKey="engagementScore" name="Engagement" fill={CHART_COLORS[3]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </section>
+          <section className="card">
+            <h2>Feedback</h2>
+            {(data.feedbackData || []).length === 0 ? <EmptyState title="No feedback in this range" /> : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={data.feedbackData}>
+                  <XAxis dataKey="eventTitle" />
+                  <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} label={{ value: 'Rating', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip formatter={(value, name, item) => [`${value} · ${item.payload.responseCount} responses`, 'Average']} />
+                  <Bar dataKey="avgRating" name="Average rating" fill={CHART_COLORS[2]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+            <p className="chart-note">{(data.feedbackData || []).map((row) => `${row.eventTitle}: ${row.avgRating} from ${row.responseCount}`).join('. ')}</p>
+          </section>
+          <section className="card">
+            <h2>Needs attention</h2>
+            {(attention.data || []).length === 0 ? <EmptyState title="Nothing needs attention" /> : (attention.data || []).map((event) => (
+              <p key={event.id}>{event.title} · {event.registered_count}/{event.capacity}</p>
+            ))}
+          </section>
+          <section className="card">
+            <h2>Recent RSVP activity</h2>
+            {(activity.data || []).length === 0 ? <EmptyState title="No RSVPs yet" /> : (activity.data || []).slice(0, 6).map((row) => (
+              <p key={row.id}>{row.name} · {row.status} · {row.eventTitle} · <RelativeTime value={row.at} /></p>
+            ))}
+          </section>
+        </div>
+      )}
+    </AppLayout>
   );
 };
 

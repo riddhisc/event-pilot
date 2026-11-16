@@ -1,96 +1,21 @@
-import { useState, useEffect } from 'react';
-
-// Mock events data
-const MOCK_EVENTS = [
-  {
-    id: 1,
-    title: 'Annual Tech Conference',
-    description: 'Largest technology conference of the year',
-    date: '2024-09-15',
-    time: '09:00 AM',
-    location: 'San Francisco Convention Center',
-    capacity: 500,
-    registeredParticipants: 250,
-    status: 'upcoming',
-    organizer: 2,
-    tags: ['technology', 'networking', 'innovation']
-  },
-  {
-    id: 2,
-    title: 'Design Thinking Workshop',
-    description: 'Intensive design thinking and innovation workshop',
-    date: '2024-07-20',
-    time: '10:00 AM',
-    location: 'New York Creative Hub',
-    capacity: 100,
-    registeredParticipants: 75,
-    status: 'upcoming',
-    organizer: 2,
-    tags: ['design', 'workshop', 'creativity']
-  }
-];
+import { useQuery } from '@tanstack/react-query';
+import { isPublishedUpcoming } from '../lib/analytics';
+import { useAuth } from './useAuth';
+import { fetchEvents } from '../services/eventService';
 
 export const useEvents = () => {
-  const [events, setEvents] = useState(MOCK_EVENTS);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const upcoming = events.filter(event => 
-      new Date(event.date) > new Date() && event.status === 'upcoming'
-    );
-    setUpcomingEvents(upcoming);
-  }, [events]);
-
-  const createEvent = (eventData) => {
-    const newEvent = {
-      ...eventData,
-      id: events.length + 1,
-      status: 'upcoming',
-      registeredParticipants: 0
-    };
-    setEvents(prevEvents => [...prevEvents, newEvent]);
-    return newEvent;
-  };
-
-  const updateEvent = (id, eventData) => {
-    setEvents(prevEvents => 
-      prevEvents.map(event => 
-        event.id === id ? { ...event, ...eventData } : event
-      )
-    );
-    return events.find(event => event.id === id);
-  };
-
-  const deleteEvent = (id) => {
-    setEvents(prevEvents => prevEvents.filter(event => event.id !== id));
-  };
-
-  const rsvpToEvent = (eventId, status) => {
-    setEvents(prevEvents => 
-      prevEvents.map(event => {
-        if (event.id === eventId) {
-          return {
-            ...event,
-            registeredParticipants: status === 'confirmed' 
-              ? event.registeredParticipants + 1 
-              : event.registeredParticipants
-          };
-        }
-        return event;
-      })
-    );
-  };
-
+  const { currentUser } = useAuth();
+  const tenantId = currentUser?.role === 'fde' ? null : currentUser?.tenant_id;
+  const query = useQuery({
+    queryKey: ['events', currentUser?.id, tenantId || 'all'],
+    queryFn: () => fetchEvents(tenantId),
+    enabled: Boolean(currentUser),
+  });
+  const events = query.data || [];
   return {
     events,
-    upcomingEvents,
-    isLoading,
-    error,
-    createEvent,
-    updateEvent,
-    deleteEvent,
-    rsvpToEvent
+    upcomingEvents: events.filter((event) => isPublishedUpcoming(event)),
+    isLoading: query.isLoading,
+    error: query.error?.message || null,
   };
 };

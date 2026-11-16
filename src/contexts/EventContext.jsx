@@ -1,87 +1,41 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { fetchEvents, fetchUpcomingEvents } from '../services/eventService';
+import { createContext, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isPublishedUpcoming } from '../lib/analytics';
+import { useAuth } from '../hooks/useAuth';
+import { createEvent, deleteEvent, fetchEvents, updateEvent } from '../services/eventService';
 
-export const EventContext = createContext();
+export const EventContext = createContext(null);
 
 export const EventProvider = ({ children }) => {
-  const [events, setEvents] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+  const tenantId = currentUser?.role === 'fde' ? null : currentUser?.tenant_id;
+  const eventsQuery = useQuery({
+    queryKey: ['events', currentUser?.id || 'anon', tenantId || 'all'],
+    queryFn: () => fetchEvents(tenantId),
+    enabled: Boolean(currentUser),
+  });
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch all events
-        const allEvents = await fetchEvents();
-        setEvents(allEvents);
-        
-        // Fetch upcoming events
-        const upcoming = await fetchUpcomingEvents();
-        setUpcomingEvents(upcoming);
-        
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Failed to load events');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['events'] });
 
-    loadEvents();
-  }, []);
-  
-  const refreshEvents = async () => {
-    try {
-      setLoading(true);
-      const allEvents = await fetchEvents();
-      setEvents(allEvents);
-      
-      const upcoming = await fetchUpcomingEvents();
-      setUpcomingEvents(upcoming);
-      
-      setError(null);
-    } catch (err) {
-      setError(err.message || 'Failed to refresh events');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const addEvent = (event) => {
-    setEvents([...events, event]);
-    if (new Date(event.date) >= new Date()) {
-      setUpcomingEvents([...upcomingEvents, event]);
-    }
-  };
-  
-  const updateEventInState = (updatedEvent) => {
-    setEvents(events.map(event => 
-      event._id === updatedEvent._id ? updatedEvent : event
-    ));
-    
-    setUpcomingEvents(upcomingEvents.map(event => 
-      event._id === updatedEvent._id ? updatedEvent : event
-    ));
-  };
-  
-  const removeEvent = (eventId) => {
-    setEvents(events.filter(event => event._id !== eventId));
-    setUpcomingEvents(upcomingEvents.filter(event => event._id !== eventId));
-  };
+  const createMutation = useMutation({ mutationFn: createEvent, onSuccess: invalidate });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, event }) => updateEvent(id, event),
+    onSuccess: invalidate,
+  });
+  const deleteMutation = useMutation({ mutationFn: deleteEvent, onSuccess: invalidate });
 
-  const value = {
+  const events = eventsQuery.data || [];
+  const value = useMemo(() => ({
     events,
-    upcomingEvents,
-    loading,
-    error,
-    refreshEvents,
-    addEvent,
-    updateEvent: updateEventInState,
-    removeEvent
-  };
+    upcomingEvents: events.filter((event) => isPublishedUpcoming(event)),
+    loading: eventsQuery.isLoading,
+    error: eventsQuery.error?.message || null,
+    refreshEvents: invalidate,
+    addEvent: createMutation.mutateAsync,
+    updateEvent: (id, event) => updateMutation.mutateAsync({ id, event }),
+    removeEvent: deleteMutation.mutateAsync,
+  }), [events, eventsQuery.isLoading, eventsQuery.error, createMutation, updateMutation, deleteMutation]);
 
   return <EventContext.Provider value={value}>{children}</EventContext.Provider>;
 };

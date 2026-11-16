@@ -1,36 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import axios from "axios";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-const StaffEngagement = () => {
-  const [engagementData, setEngagementData] = useState([]);
-
-  useEffect(() => {
-    const fetchEngagementData = async () => {
-      try {
-        const response = await axios.get("/api/engagement");
-        setEngagementData(response.data);
-      } catch (error) {
-        console.error("Error fetching engagement data:", error);
-      }
-    };
-
-    fetchEngagementData();
-  }, []);
-
-  return (
-    <div className="p-4 bg-white shadow-md rounded-md">
-      <h2 className="text-lg font-bold mb-3">Staff Engagement Report</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={engagementData}>
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
-          <Line type="monotone" dataKey="engagementScore" stroke="#4CAF50" />
+const StaffEngagement = ({ data = [] }) => (
+  <section className="card">
+    <h2>Engagement by department</h2>
+    {data.length === 0 ? <p>No engagement data yet.</p> : (
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={data}>
+          <XAxis dataKey="date" label={{ value: 'Department', position: 'insideBottom', offset: -4 }} />
+          <YAxis domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} tickFormatter={(value) => `${value}%`} label={{ value: 'Percent', angle: -90, position: 'insideLeft' }} />
+          <Tooltip formatter={(value) => [`${value}%`, 'Engagement']} />
+          <Line type="monotone" dataKey="engagementScore" stroke="#10B981" />
         </LineChart>
       </ResponsiveContainer>
-    </div>
-  );
-};
+    )}
+  </section>
+);
 
 export default StaffEngagement;

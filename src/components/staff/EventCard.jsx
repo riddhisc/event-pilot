@@ -1,85 +1,56 @@
-import React from 'react';
+import { MapPin } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { formatDate, formatTime } from '../../utils/formatters';
+import { downloadIcs } from '../../lib/ics';
 import { rsvpToEvent } from '../../services/eventService';
+import { formatDate, formatTime } from '../../utils/formatters';
+import { pluralize } from '../../utils/formatters';
+import { useToast } from '../ui/Toast';
+import { Badge, Progress } from '../ui/kit';
+
+const OPTIONS = [['going', 'Going'], ['maybe', 'Maybe'], ['declined', "Can't go"]];
 
 const EventCard = ({ event }) => {
-  const [rsvpStatus, setRsvpStatus] = React.useState(event.rsvpStatus || 'none');
-  const [loading, setLoading] = React.useState(false);
+  const { push } = useToast();
+  const [status, setStatus] = useState(event.rsvpStatus || 'none');
+  const [busy, setBusy] = useState(false);
+  const spots = Math.max(0, (event.capacity || 0) - (event.registered_count || 0));
 
-  const handleRSVP = async (status) => {
-    setLoading(true);
+  const choose = async (next) => {
+    const previous = status;
+    setStatus(next);
+    setBusy(true);
     try {
-      await rsvpToEvent(event._id, status);
-      setRsvpStatus(status);
+      const result = await rsvpToEvent(event.id, next);
+      setStatus(result.status || next);
+      push({ title: next === 'going' ? 'You are going' : next === 'maybe' ? 'Marked as maybe' : 'RSVP updated' });
     } catch (error) {
-      console.error('RSVP failed:', error);
+      setStatus(previous);
+      push({ title: error.message || 'RSVP failed', tone: 'danger' });
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
-  const isUpcoming = new Date(event.date) > new Date();
-
   return (
-    <div className={`event-card ${isUpcoming ? '' : 'past-event'}`}>
-      <div className="event-date">
-        {formatDate(event.date)}
+    <article className="card event-card">
+      <Badge status={event.type}>{event.type === 'in_person' ? 'In person' : event.type === 'virtual' ? 'Virtual' : 'Hybrid'}</Badge>
+      <h3>{event.title}</h3>
+      <p><span className="chip">{formatDate(event.starts_at)}</span> {formatTime(event.starts_at)} – {formatTime(event.ends_at)}</p>
+      <p><MapPin size={14} aria-hidden="true" /> {event.location || 'Online'}</p>
+      <p className="desc-clamp">{event.description}</p>
+      <p>{pluralize(event.registered_count || 0, 'person', 'people')} going · {pluralize(spots, 'spot')} left</p>
+      <Progress value={event.registered_count || 0} max={event.capacity || 1} label="Capacity" />
+      <div className="segmented" role="group" aria-label={`RSVP for ${event.title}`}>
+        {OPTIONS.map(([id, label]) => (
+          <button key={id} type="button" aria-pressed={status === id} disabled={busy} onClick={() => choose(id)}>{busy && status === id ? 'Saving...' : label}</button>
+        ))}
       </div>
-      
-      <h3 className="event-title">{event.name}</h3>
-      
-      <div className="event-details">
-        <div className="event-time">
-          <span className="icon">⏰</span> 
-          {formatTime(event.startTime)} - {formatTime(event.endTime)}
-        </div>
-        
-        <div className="event-location">
-          <span className="icon">📍</span> {event.location}
-        </div>
-        <div className="event-type">
-          <span className="icon">
-            {event.type === 'in-person' ? '🏢' : event.type === 'virtual' ? '💻' : '🔄'}
-          </span> 
-          {event.type === 'in-person' ? 'In-Person' : event.type === 'virtual' ? 'Virtual' : 'Hybrid'}
-        </div>
+      <div className="form-actions">
+        <Link className="btn btn-ghost" to={`/staff/events/${event.id}`}>View details</Link>
+        <button type="button" className="btn btn-ghost" onClick={() => { downloadIcs(event); push({ title: 'Calendar file downloaded' }); }}>Add to calendar</button>
       </div>
-      
-      <p className="event-description">{event.description}</p>
-      
-      {isUpcoming && (
-        <div className="event-actions">
-          <div className="rsvp-buttons">
-            <button 
-              className={`rsvp-button attending ${rsvpStatus === 'attending' ? 'active' : ''}`}
-              onClick={() => handleRSVP('attending')}
-              disabled={loading}
-            >
-              Going
-            </button>
-            <button 
-              className={`rsvp-button maybe ${rsvpStatus === 'maybe' ? 'active' : ''}`}
-              onClick={() => handleRSVP('maybe')}
-              disabled={loading}
-            >
-              Maybe
-            </button>
-            <button 
-              className={`rsvp-button declined ${rsvpStatus === 'declined' ? 'active' : ''}`}
-              onClick={() => handleRSVP('declined')}
-              disabled={loading}
-            >
-              Can't Go
-            </button>
-          </div>
-          
-          <Link to={`/staff/events/${event._id}`} className="view-details-link">
-            View Details
-          </Link>
-        </div>
-      )}
-    </div>
+    </article>
   );
 };
 

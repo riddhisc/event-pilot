@@ -1,113 +1,67 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { initializeChat, sendMessage, disconnectChat } from '../../services/socketService';
+import { loadMessages, sendChatMessage, subscribeToChat } from '../../services/chatService';
+import RelativeTime from '../common/RelativeTime';
 
 const LiveChat = ({ eventId }) => {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
   const { currentUser } = useAuth();
-  const messagesEndRef = useRef(null);
-  
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
+  const [connected, setConnected] = useState(false);
+  const [error, setError] = useState('');
+  const endRef = useRef(null);
+
   useEffect(() => {
-    const setupChat = async () => {
-      try {
-        const socket = await initializeChat(eventId);
-        
-        socket.on('connect', () => {
-          setIsConnected(true);
-        });
-        
-        socket.on('disconnect', () => {
-          setIsConnected(false);
-        });
-        
-        socket.on('message', (message) => {
-          setMessages((prevMessages) => [...prevMessages, message]);
-        });
-        
-        socket.on('chat_history', (history) => {
-          setMessages(history);
-        });
-        
-        return () => {
-          disconnectChat(socket);
-        };
-      } catch (error) {
-        console.error('Error setting up chat:', error);
-      }
-    };
-    
-    if (eventId) {
-      setupChat();
-    }
+    let stop = () => {};
+    loadMessages(eventId).then((rows) => {
+      setMessages(rows);
+      setConnected(true);
+    }).catch((err) => {
+      setConnected(false);
+      setError(err.message);
+    });
+    stop = subscribeToChat(eventId, (message) => {
+      setConnected(true);
+      setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
+    });
+    return () => stop?.();
   }, [eventId]);
-  
+
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    endRef.current?.scrollIntoView({ block: 'nearest' });
   }, [messages]);
-  
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    
-    if (newMessage.trim() && isConnected) {
-      const messageData = {
-        eventId,
-        text: newMessage,
-        senderId: currentUser._id,
-        senderName: currentUser.name
-      };
-      
-      sendMessage(messageData);
-      setNewMessage('');
-    }
+
+  const send = async (event) => {
+    event.preventDefault();
+    if (!text.trim() || !connected) return;
+    const message = { eventId, senderId: currentUser?.id, senderName: currentUser?.name || 'You', tenantId: currentUser?.tenant_id, text: text.trim() };
+    setText('');
+    const saved = await sendChatMessage(message);
+    setMessages((current) => current.some((item) => item.id === saved.id) ? current : [...current, saved]);
   };
-  
+
   return (
-    <div className="live-chat">
-      <div className="chat-header">
-        <h3>Live Chat</h3>
-        <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </span>
+    <section className="card" aria-label="Live chat">
+      <h2>Live chat</h2>
+      <p className="muted">{connected ? 'Connected' : 'Disconnected'}</p>
+      {error && <p className="error-message" role="alert">{error}</p>}
+      <div aria-live="polite">
+        {messages.length === 0 && <p>No messages yet.</p>}
+        {messages.map((message) => (
+          <article key={message.id}>
+            <strong>{message.senderName}</strong>
+            <p>{message.text}</p>
+            <RelativeTime value={message.timestamp} />
+          </article>
+        ))}
+        <div ref={endRef} />
       </div>
-      
-      <div className="chat-messages">
-        {messages.length > 0 ? (
-          messages.map((message, index) => (
-            <div 
-              key={index}
-              className={`chat-message ${message.senderId === currentUser._id ? 'own-message' : ''}`}
-            >
-              <div className="message-sender">{message.senderName}</div>
-              <div className="message-text">{message.text}</div>
-              <div className="message-time">
-                {new Date(message.timestamp).toLocaleTimeString()}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-messages">
-            No messages yet. Start the conversation!
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      
-      <form className="chat-input" onSubmit={handleSendMessage}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          disabled={!isConnected}
-        />
-        <button type="submit" disabled={!isConnected || !newMessage.trim()}>
-          Send
-        </button>
+      <form className="form-actions" onSubmit={send}>
+        <label className="sr-only" htmlFor="chat-message">Message</label>
+        <input id="chat-message" value={text} disabled={!connected} onChange={(event) => setText(event.target.value)} placeholder={connected ? 'Type a message' : 'Chat is disconnected'} />
+        <button className="btn" type="submit" disabled={!connected || !text.trim()}>Send</button>
       </form>
-    </div>
+    </section>
   );
 };
 

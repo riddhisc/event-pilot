@@ -3,7 +3,6 @@ import { fetchNetworkingSuggestions } from '../../services/eventService';
 import Navbar from '../../components/common/Navbar';
 import Sidebar from '../../components/common/Sidebar';
 import NetworkingMatch from '../../components/staff/NetworkingMatch';
-import QRCodeGenerator from '../../components/common/QRCodeGenerator';
 import Loader from '../../components/common/Loader';
 
 const Networking = () => {
@@ -17,7 +16,7 @@ const Networking = () => {
       try {
         const data = await fetchNetworkingSuggestions();
         setSuggestions(data);
-      } catch (err) {
+      } catch {
         setError('Failed to load networking suggestions');
       } finally {
         setLoading(false);
@@ -53,12 +52,12 @@ const Networking = () => {
               ) : (
                 <div className="networking-matches">
                   {suggestions.length > 0 ? (
-                    suggestions.map(suggestion => (
-                      <NetworkingMatch 
-                        key={suggestion._id}
+                    suggestions.map((suggestion) => (
+                      <NetworkingMatch
+                        key={suggestion.id || suggestion._id}
                         suggestion={suggestion}
-                        onSelect={() => handleContactSelect(suggestion)}
-                        isSelected={selectedContact && selectedContact._id === suggestion._id}
+                        connected={selectedContact?.id === (suggestion.id || suggestion._id)}
+                        onConnect={() => handleContactSelect(suggestion)}
                       />
                     ))
                   ) : (
@@ -68,15 +67,10 @@ const Networking = () => {
               )}
             </div>
             
-            {selectedContact && (
-              <div className="qrcode-section">
-                <h2>Share Your Contact</h2>
-                <QRCodeGenerator data={selectedContact} />
-                <p className="qr-instructions">
-                  Scan this code to quickly connect during events
-                </p>
-              </div>
-            )}
+            <div className="qrcode-section">
+              <h2>My QR code</h2>
+              <p>Your contact QR is available after you sign in.</p>
+            </div>
           </div>
         </main>
       </div>

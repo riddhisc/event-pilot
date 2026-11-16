@@ -1,74 +1,66 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { fetchNotifications, markAsRead, markAllAsRead } from '../services/notificationService';
-import { listenForNotifications } from '../services/socketService';
+import { createContext, useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { fetchNotifications, markAllAsRead, markAsRead } from '../services/notificationService';
+import { listenForNotifications } from '../services/socketService';
 
-export const NotificationContext = createContext();
+export const NotificationContext = createContext(null);
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    if (!currentUser) return;
-    
+    if (!currentUser) {
+      setNotifications([]);
+      setLoading(false);
+      return undefined;
+    }
+
+    let active = true;
     const loadNotifications = async () => {
       try {
         setLoading(true);
         const data = await fetchNotifications();
+        if (!active) return;
         setNotifications(data);
-        setUnreadCount(data.filter(notification => !notification.read).length);
         setError(null);
       } catch (err) {
-        setError(err.message || 'Failed to load notifications');
+        if (active) setError(err.message || 'Failed to load notifications');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     loadNotifications();
-    
-    // Set up real-time notifications
     const socket = listenForNotifications((notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      setNotifications((prev) => [notification, ...prev]);
     });
-    
+
     return () => {
-      if (socket) {
-        socket.off('notification');
-      }
+      active = false;
+      socket.off('notification');
     };
   }, [currentUser]);
-  
+
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+
   const handleMarkAsRead = async (notificationId) => {
     try {
       await markAsRead(notificationId);
-      
-      setNotifications(notifications.map(notification => 
-        notification._id === notificationId 
-          ? { ...notification, read: true } 
-          : notification
-      ));
-      
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications((current) => current.map((notification) => (
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      )));
     } catch (err) {
       setError(err.message || 'Failed to mark notification as read');
     }
   };
-  
+
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-      
-      setNotifications(notifications.map(notification => 
-        ({ ...notification, read: true })
-      ));
-      
-      setUnreadCount(0);
+      setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
     } catch (err) {
       setError(err.message || 'Failed to mark all notifications as read');
     }
@@ -80,7 +72,7 @@ export const NotificationProvider = ({ children }) => {
     loading,
     error,
     markAsRead: handleMarkAsRead,
-    markAllAsRead: handleMarkAllAsRead
+    markAllAsRead: handleMarkAllAsRead,
   };
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

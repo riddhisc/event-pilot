@@ -1,7 +1,37 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vitest/config';
+import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['logo.svg', 'hero-image.png'],
+      manifest: {
+        name: 'EventBuddy',
+        short_name: 'EventBuddy',
+        description: 'Office events for every team.',
+        theme_color: '#4F46E5',
+        background_color: '#F7F7F8',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          { src: '/logo.svg', sizes: 'any', purpose: 'any' },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
+  server: {
+    port: 5175,
+    strictPort: true,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+  },
+});

@@ -1,52 +1,28 @@
-import io from 'socket.io-client';
+import { isSupabaseConfigured, useMock } from '../lib/env';
+import { supabase } from '../lib/supabaseClient';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-//const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
-
-let socket = null;
-
-export const initializeSocket = (token) => {
-  socket = io(SOCKET_URL, {
-    auth: {
-      token
-    }
-  });
-  
-  return socket;
-};
-
-export const initializeChat = (eventId) => {
-  if (!socket) {
-    const token = localStorage.getItem('token');
-    socket = initializeSocket(token);
+export function listenForNotifications(callback) {
+  if (useMock || !isSupabaseConfigured || !supabase) {
+    return { off() {} };
   }
-  
-  socket.emit('join_room', { roomId: `event_${eventId}` });
-  return socket;
-};
 
-export const disconnectChat = (socket) => {
-  if (socket) {
-    socket.disconnect();
-  }
-};
+  const channel = supabase
+    .channel('notifications-feed')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+      const row = payload.new;
+      callback({
+        id: row.id,
+        type: row.type,
+        message: row.payload?.message || row.type,
+        read: false,
+        createdAt: row.created_at,
+      });
+    })
+    .subscribe();
 
-export const sendMessage = (messageData) => {
-  if (socket) {
-    socket.emit('send_message', messageData);
-  }
-};
-
-export const listenForNotifications = (callback) => {
-  if (!socket) {
-    const token = localStorage.getItem('token');
-    socket = initializeSocket(token);
-  }
-  
-  socket.on('notification', (data) => {
-    callback(data);
-  });
-  
-  return socket;
-};
+  return {
+    off() {
+      supabase.removeChannel(channel);
+    },
+  };
+}

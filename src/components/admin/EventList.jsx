@@ -1,33 +1,29 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { deleteEvent } from '../../services/eventService';
+import { formatDate, formatTime } from '../../utils/formatters';
 
-const EventList = () => {
-  const [events, setEvents] = useState([]);
+const EventList = ({ events, onEdit, onDelete }) => {
+  const handleDelete = async (id) => {
+    await deleteEvent(id);
+    onDelete(id);
+  };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await axios.get("/api/events");
-        setEvents(response.data);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    };
-
-    fetchEvents();
-  }, []);
+  if (!events.length) return <p>No events yet.</p>;
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-md">
-      <h2 className="text-lg font-bold mb-3">Upcoming Events</h2>
-      <ul>
-        {events.map((event) => (
-          <li key={event.id} className="border-b p-2">
-            <strong>{event.name}</strong> - {event.date} at {event.time}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="event-list">
+      {events.map((event) => (
+        <li key={event.id}>
+          <div>
+            <strong>{event.title}</strong>
+            <p>{formatDate(event.starts_at)} at {formatTime(event.starts_at)} · {event.location} · {event.status}</p>
+          </div>
+          <div className="form-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => onEdit(event)}>Edit</button>
+            <button type="button" className="btn btn-ghost" onClick={() => handleDelete(event.id)}>Delete</button>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 };
 

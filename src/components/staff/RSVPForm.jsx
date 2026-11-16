@@ -1,48 +1,35 @@
-import React, { useState } from "react";
-import axios from "axios";
+import { useState } from 'react';
+import { rsvpToEvent } from '../../services/eventService';
 
-const RSVPForm = () => {
-  const [eventId, setEventId] = useState("");
-  const [status, setStatus] = useState("Going");
+const RSVPForm = ({ eventId }) => {
+  const [status, setStatus] = useState('going');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const handleRSVP = async (e) => {
-    e.preventDefault();
+  const handleRSVP = async (event) => {
+    event.preventDefault();
+    setError('');
     try {
-      await axios.post("/api/rsvp", { eventId, status });
-      alert("RSVP submitted successfully!");
-      setEventId("");
-      setStatus("Going");
-    } catch (error) {
-      console.error("Error submitting RSVP:", error);
+      const result = await rsvpToEvent(eventId, status);
+      setMessage(result.status === 'waitlist' ? 'The event is full. You are on the waitlist.' : 'RSVP saved.');
+    } catch (err) {
+      setError(err.message || 'RSVP failed');
     }
   };
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-md">
-      <h2 className="text-lg font-bold mb-3">RSVP for Event</h2>
-      <form onSubmit={handleRSVP} className="flex flex-col gap-3">
-        <input
-          type="text"
-          placeholder="Enter Event ID"
-          value={eventId}
-          onChange={(e) => setEventId(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="Going">Going</option>
-          <option value="Maybe">Maybe</option>
-          <option value="Not Going">Not Going</option>
-        </select>
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          Submit RSVP
-        </button>
-      </form>
-    </div>
+    <form onSubmit={handleRSVP} className="card">
+      <h2>RSVP</h2>
+      <label htmlFor="rsvp-status">Response</label>
+      <select id="rsvp-status" value={status} onChange={(event) => setStatus(event.target.value)}>
+        <option value="going">Going</option>
+        <option value="maybe">Maybe</option>
+        <option value="declined">Can&apos;t go</option>
+      </select>
+      <button className="btn" type="submit">Submit RSVP</button>
+      {message && <p role="status">{message}</p>}
+      {error && <p className="error-message" role="alert">{error}</p>}
+    </form>
   );
 };
 

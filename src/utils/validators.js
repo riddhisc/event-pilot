@@ -3,37 +3,16 @@ export const validateEmail = (email) => {
   return re.test(String(email).toLowerCase());
 };
 
-export const validatePassword = (password) => {
-  return password.length >= 8;
-};
+export const validatePassword = (password) => password.length >= 8;
 
 export const validateEventForm = (eventData) => {
   const errors = {};
-  
-  if (!eventData.name) {
-    errors.name = 'Event name is required';
+  if (!eventData.title) errors.title = 'Title is required';
+  if (!eventData.starts_at) errors.starts_at = 'Start is required';
+  if (!eventData.ends_at) errors.ends_at = 'End is required';
+  else if (eventData.starts_at && new Date(eventData.ends_at) <= new Date(eventData.starts_at)) {
+    errors.ends_at = 'End must be after start';
   }
-  
-  if (!eventData.date) {
-    errors.date = 'Date is required';
-  }
-  
-  if (!eventData.startTime) {
-    errors.startTime = 'Start time is required';
-  }
-  
-  if (!eventData.endTime) {
-    errors.endTime = 'End time is required';
-  } else if (eventData.startTime && eventData.endTime <= eventData.startTime) {
-    errors.endTime = 'End time must be after start time';
-  }
-  
-  if (!eventData.location) {
-    errors.location = 'Location is required';
-  }
-  
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors
-  };
+  if (!eventData.location) errors.location = 'Location is required';
+  return { isValid: Object.keys(errors).length === 0, errors };
 };

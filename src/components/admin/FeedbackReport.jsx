@@ -1,36 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import axios from "axios";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-const FeedbackReport = () => {
-  const [feedbackData, setFeedbackData] = useState([]);
-
-  useEffect(() => {
-    const fetchFeedback = async () => {
-      try {
-        const response = await axios.get("/api/feedback"); // Adjust API endpoint
-        setFeedbackData(response.data);
-      } catch (error) {
-        console.error("Error fetching feedback data:", error);
-      }
-    };
-
-    fetchFeedback();
-  }, []);
-
-  return (
-    <div className="p-4 bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-semibold mb-4">Feedback Report</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={feedbackData}>
-          <XAxis dataKey="eventName" />
-          <YAxis />
+const FeedbackReport = ({ data = [] }) => (
+  <section className="card">
+    <h2>Feedback</h2>
+    {data.length === 0 ? <p>No feedback yet.</p> : (
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data}>
+          <XAxis dataKey="eventTitle" />
+          <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} label={{ value: 'Rating', angle: -90, position: 'insideLeft' }} />
           <Tooltip />
-          <Bar dataKey="rating" fill="#4CAF50" />
+          <Bar dataKey="avgRating" name="Average rating" fill="#F59E0B" />
         </BarChart>
       </ResponsiveContainer>
-    </div>
-  );
-};
+    )}
+  </section>
+);
 
 export default FeedbackReport;
