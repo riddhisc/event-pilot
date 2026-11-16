@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, useMock } from '../lib/env';
+import { isSupabaseConfigured } from '../lib/env';
 import { supabase } from '../lib/supabaseClient';
 
 const SESSION_KEY = 'eventbuddy.session';
@@ -45,8 +45,12 @@ function mockAccounts() {
   ];
 }
 
+function mockMode() {
+  return import.meta.env.VITE_USE_MOCK === 'true';
+}
+
 function live() {
-  return !useMock && isSupabaseConfigured && supabase;
+  return !mockMode() && isSupabaseConfigured && supabase;
 }
 
 function passwordOverrides() {
@@ -118,7 +122,7 @@ export async function login(credentials) {
   }
 
   if (!live()) {
-    if (!useMock) {
+    if (!mockMode()) {
       throw new Error('Set VITE_USE_MOCK=true or add the Supabase URL and anon key.');
     }
     const email = String(credentials.email || '').trim().toLowerCase();
@@ -175,7 +179,7 @@ export async function requestPasswordReset(email) {
     if (error) throw error;
     return { message: 'If that email is registered, a reset link is on its way.' };
   }
-  if (!useMock) throw new Error('Password reset needs Supabase or mock mode.');
+  if (!mockMode()) throw new Error('Password reset needs Supabase or mock mode.');
   const token = crypto.randomUUID();
   sessionStorage.setItem(RESET_KEY, JSON.stringify({ email, token }));
   return { message: 'Mock mode saved a reset token in this browser session. Continue to choose a new password.' };

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { groupFeedback, isPublishedUpcoming, shapeAnalytics } from '../lib/analytics';
 import { homeFor } from '../lib/roles';
 import { featureFlagsSchema, tenantSettingsSchema } from '../lib/schemas';
@@ -182,7 +182,14 @@ describe('calendar export', () => {
 });
 
 describe('mock login', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('rejects a password that does not match', async () => {
-    await expect(login({ email: 'admin@eventbuddy.com', password: 'not-the-password' })).rejects.toThrow(/do not match/i);
+    vi.stubEnv('VITE_USE_MOCK', 'true');
+    vi.stubEnv('VITE_MOCK_ADMIN_EMAIL', 'avery@northwind.example');
+    vi.stubEnv('VITE_MOCK_ADMIN_PASSWORD', 'test-only-secret');
+    await expect(login({ email: 'avery@northwind.example', password: 'not-the-password' })).rejects.toThrow(/do not match/i);
   });
 });
