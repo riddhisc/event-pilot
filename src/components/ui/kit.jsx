@@ -6,7 +6,7 @@ import { getRouteCrumbs } from '../../lib/routeMetadata';
 
 export const IconButton = forwardRef(function IconButton({ label, children, className = '', ...props }, ref) {
   return (
-    <button ref={ref} type="button" className={`icon-button ${className}`} aria-label={label} {...props}>
+    <button ref={ref} type="button" className={`icon-button ${className}`} aria-label={label} title={label} {...props}>
       {children}
     </button>
   );

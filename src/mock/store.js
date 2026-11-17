@@ -262,6 +262,22 @@ let events = [
   },
 ];
 
+const EVENTS_STORAGE_KEY = 'eventbuddy.mock.events';
+try {
+  const savedEvents = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem(EVENTS_STORAGE_KEY) || 'null') : null;
+  if (Array.isArray(savedEvents)) events = savedEvents;
+} catch {
+  // Ignore malformed mock storage and use the fixtures.
+}
+
+function persistEvents() {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+  } catch {
+    // Storage is optional in tests and restricted browser contexts.
+  }
+}
+
 let rsvps = [
   { event_id: 'evt-summit', user_id: 'user-staff', status: 'going', checked_in_at: null, created_at: atOffset(-1, 11, 0) },
   { event_id: 'evt-workshop', user_id: 'user-lee', status: 'going', checked_in_at: null, created_at: atOffset(-2, 15, 0) },
@@ -397,6 +413,7 @@ export function getEvent(id) {
 export function saveEvent(input, id) {
   if (id) {
     events = events.map((event) => (event.id === id ? { ...event, ...input, id } : event));
+    persistEvents();
     return getEvent(id);
   }
   const created = {
@@ -410,18 +427,21 @@ export function saveEvent(input, id) {
     id: crypto.randomUUID(),
   };
   events = [created, ...events];
+  persistEvents();
   return clone(created);
 }
 
 export function removeEvent(id) {
   const removed = events.find((event) => event.id === id) || null;
   events = events.filter((event) => event.id !== id);
+  persistEvents();
   return clone(removed);
 }
 
 export function restoreEvent(snapshot) {
   if (!snapshot) return null;
   events = [snapshot, ...events.filter((event) => event.id !== snapshot.id)];
+  persistEvents();
   return clone(snapshot);
 }
 
@@ -439,6 +459,7 @@ export function duplicateEvent(id) {
 
 export function setEventStatus(id, status) {
   events = events.map((event) => (event.id === id ? { ...event, status } : event));
+  persistEvents();
   return getEvent(id);
 }
 
@@ -463,6 +484,7 @@ export function upsertRsvp(eventId, userId, status) {
     if (nextStatus === 'going') event.registered_count += 1;
   }
   if (nextStatus === 'declined') promoteWaitlist(eventId);
+  persistEvents();
   return { event: getEvent(eventId), status: nextStatus };
 }
 

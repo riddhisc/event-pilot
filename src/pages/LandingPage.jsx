@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
+import { BarChart3, CalendarDays, Network, Workflow } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { useUiStore } from '../stores/uiStore';
 import { IconButton } from '../components/ui/kit';
@@ -43,31 +44,36 @@ const LandingPage = () => {
           <article className="card"><strong>Onboarding</strong><p>Northwind Offices · 72%</p></article>
         </div>
       </section>
-      <section className="features-grid">
-        <article className="card"><h2>Events</h2><p>Publish in-person, virtual, and hybrid events with capacity and waitlists.</p></article>
-        <article className="card"><h2>Analytics</h2><p>See participation, feedback, and department engagement.</p></article>
-        <article className="card"><h2>Networking</h2><p>Suggest colleagues from shared departments, interests, and events.</p></article>
-        <article className="card"><h2>Onboarding & setup console</h2><p>Onboard a company, connect tools, and roll configuration back.</p></article>
+      <section className="feature-section" aria-labelledby="feature-title">
+        <div className="section-intro"><p className="eyebrow">One workspace</p><h2 id="feature-title">Everything teams need to gather well.</h2></div>
+        <div className="feature-list">
+          <article className="feature-item"><CalendarDays aria-hidden="true" /><div><h3>Events</h3><p>Publish in-person, virtual, and hybrid events with capacity and waitlists.</p></div></article>
+          <article className="feature-item"><BarChart3 aria-hidden="true" /><div><h3>Analytics</h3><p>See participation, feedback, and department engagement.</p></div></article>
+          <article className="feature-item"><Network aria-hidden="true" /><div><h3>Networking</h3><p>Suggest colleagues from shared departments, interests, and events.</p></div></article>
+          <article className="feature-item"><Workflow aria-hidden="true" /><div><h3>Onboarding & setup</h3><p>Connect tools and roll configuration back without losing history.</p></div></article>
+        </div>
       </section>
-      <section className="features-grid">
-        <h2>How it works</h2>
-        <article className="card"><h3>1. Request a workspace</h3><p>Tell us the company name and who should administer it.</p></article>
-        <article className="card"><h3>2. Import people</h3><p>Bring staff in, connect the calendar, and publish a first event.</p></article>
-        <article className="card"><h3>3. Run the gathering</h3><p>RSVPs, reminders, check-in, and a short feedback loop.</p></article>
+      <section className="process-section" aria-labelledby="process-title">
+        <div className="section-intro"><p className="eyebrow">A simple rhythm</p><h2 id="process-title">How it works</h2></div>
+        <div className="process-list">
+          <article className="process-step"><span>01</span><h3>Request a workspace</h3><p>Tell us the company name and who should administer it.</p></article>
+          <article className="process-step"><span>02</span><h3>Import people</h3><p>Bring staff in, connect the calendar, and publish a first event.</p></article>
+          <article className="process-step"><span>03</span><h3>Run the gathering</h3><p>RSVPs, reminders, check-in, and a short feedback loop.</p></article>
+        </div>
       </section>
-      <section className="features-grid">
+      <section className="proof-section">
         <p className="eyebrow">Teams using EventBuddy</p>
         <div className="chip-row">
           <span className="chip">Northwind Offices</span>
           <span className="chip">Contoso Labs</span>
           <span className="chip">Studio teams</span>
         </div>
-        <blockquote className="card">“People actually RSVP now, and we can see which departments show up.”</blockquote>
+        <blockquote>“People actually RSVP now, and we can see which departments show up.”</blockquote>
       </section>
-      <section className="features-grid" id="request-demo">
-        <h2>Request a demo</h2>
+      <section className="demo-section" id="request-demo">
+        <div className="section-intro"><p className="eyebrow">See it in action</p><h2>Request a demo</h2><p>Tell us where your team is today. We’ll show you the shortest path to a better gathering.</p></div>
         {sent ? <p role="status">Thanks. We will reply to {form.email}.</p> : (
-          <form className="card" onSubmit={(event) => {
+          <form className="demo-form" onSubmit={(event) => {
             event.preventDefault();
             setSent(true);
             push({ title: 'Demo request sent' });
@@ -82,8 +88,8 @@ const LandingPage = () => {
           </form>
         )}
       </section>
-      <section className="features-grid">
-        <h2>FAQ</h2>
+      <section className="faq-section">
+        <div className="section-intro"><p className="eyebrow">Questions</p><h2>FAQ</h2></div>
         <div className="faq">
           <details><summary>Does each company stay separate?</summary><p>Yes. People, events, and integrations belong to one tenant.</p></details>
           <details><summary>Can we try it without a real directory?</summary><p>Demo accounts are available in local development.</p></details>
@@ -91,7 +97,6 @@ const LandingPage = () => {
         </div>
       </section>
       <footer className="landing-footer">
-        <p>EventBuddy</p>
         <Link to="/login">Sign in</Link>
       </footer>
     </div>

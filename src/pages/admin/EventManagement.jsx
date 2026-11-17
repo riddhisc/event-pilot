@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '../../components/common/AppLayout';
 import CreateEventForm from '../../components/admin/CreateEventForm';
@@ -22,6 +22,19 @@ const EventManagement = () => {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [pendingCancel, setPendingCancel] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [params, setParams] = useSearchParams();
+
+  useEffect(() => {
+    const requestedId = params.get('edit');
+    if (!requestedId || !events.data) return;
+    const match = events.data.find((event) => event.id === requestedId);
+    if (!match) return;
+    setEditEvent(match);
+    setOpen(true);
+    const next = new URLSearchParams(params);
+    next.delete('edit');
+    setParams(next, { replace: true });
+  }, [events.data, params, setParams]);
 
   const rows = useMemo(() => {
     const now = new Date();
@@ -68,7 +81,7 @@ const EventManagement = () => {
           ]}
           rowActions={(row) => [
             { label: 'Edit', onClick: () => { setEditEvent(row); setOpen(true); } },
-            { label: 'Duplicate', onClick: async () => { await duplicateEvent(row.id); await refresh(); push({ title: 'Event duplicated' }); } },
+            { label: 'Duplicate', onClick: async () => { await duplicateEvent(row.id); await refresh(); setTab('drafts'); push({ title: 'Event duplicated and moved to Drafts' }); } },
             { label: 'Cancel', onClick: () => setPendingCancel(row) },
             { label: 'Delete', danger: true, onClick: () => setPendingDelete(row) },
           ]}

@@ -105,7 +105,11 @@ const Navbar = () => {
           <img src="/logo.svg" alt="" width="32" height="32" />
           <span>EventBuddy</span>
         </Link>
-        {currentUser?.role === 'fde' ? <ClientSwitcher /> : <strong>{company?.name || ''}</strong>}
+        {currentUser?.role === 'fde' ? <ClientSwitcher /> : (
+          <div className="workspace-context" aria-label={`Workspace: ${company?.name || 'Not selected'}`}>
+            <strong>{company?.name || 'Not selected'}</strong>
+          </div>
+        )}
         {currentUser && (
           <div className="navbar-actions">
             <IconButton label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
@@ -113,7 +117,7 @@ const Navbar = () => {
             </IconButton>
             <div className="bell-wrap">
               <IconButton ref={bellTriggerRef} label={`Notifications, ${unreadCount} unread`} aria-expanded={bell} aria-haspopup="dialog" onClick={() => setBell((open) => !open)}>
-                <Bell size={18} />
+                <Bell size={21} strokeWidth={2.2} />
                 {unreadCount > 0 && <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
               </IconButton>
               {bell && (

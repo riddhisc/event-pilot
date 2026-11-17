@@ -8,8 +8,9 @@ import { pluralize } from '../../utils/formatters';
 import RelativeTime from '../../components/common/RelativeTime';
 import { Badge, EmptyState, PageHeader, Skeleton, StatCard, Tabs } from '../../components/ui/kit';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast';
+import { updateEvent } from '../../services/eventService';
 
 const RANGES = [
   { id: '30', label: 'Last 30 days' },
@@ -21,12 +22,29 @@ const AdminDashboard = () => {
   const [range, setRange] = useState('90');
   const [params, setParams] = useSearchParams();
   const { push } = useToast();
+  const navigate = useNavigate();
+  const [attentionBusy, setAttentionBusy] = useState('');
   useEffect(() => { const value = params.get('range'); if (['30', '90', '365'].includes(value)) setRange(value); }, [params]);
   const changeRange = (value) => { setRange(value); setParams((current) => { current.set('range', value); return current; }); };
   const analytics = useQuery({ queryKey: ['analytics', range], queryFn: () => fetchAnalytics(range) });
   const attention = useQuery({ queryKey: ['attention'], queryFn: fetchAttention });
   const activity = useQuery({ queryKey: ['activity'], queryFn: fetchActivity });
   const data = analytics.data;
+  const handleAttention = async (item) => {
+    if (item.action === 'Edit event') {
+      navigate(`/admin/events?edit=${encodeURIComponent(item.event.id)}`);
+      return;
+    }
+    setAttentionBusy(item.id);
+    try {
+      if (item.action === 'Enable waitlist') {
+        await updateEvent(item.event.id, { waitlist_enabled: true });
+        push({ title: 'Waitlist enabled' });
+      } else push({ title: 'Reminder queued' });
+    } finally {
+      setAttentionBusy('');
+    }
+  };
 
   return (
     <AppLayout role="admin">
@@ -83,7 +101,7 @@ const AdminDashboard = () => {
           <section className="card">
             <h2>Needs attention</h2>
             {(attention.data || []).length === 0 ? <EmptyState title="Nothing needs attention" /> : (attention.data || []).map((item) => (
-              <div className="attention-row" key={item.id}><div><Badge status={item.severity}>{item.severity}</Badge><p>{item.message}</p></div><button type="button" className="btn btn-ghost" onClick={() => push({ title: `${item.action} queued` })}>{item.action}</button></div>
+              <div className="attention-row" key={item.id}><div><Badge status={item.severity}>{item.severity}</Badge><p>{item.message}</p></div><button type="button" className="btn btn-ghost" disabled={attentionBusy === item.id} onClick={() => handleAttention(item)}>{attentionBusy === item.id ? 'Working...' : item.action}</button></div>
             ))}
           </section>
           <section className="card">

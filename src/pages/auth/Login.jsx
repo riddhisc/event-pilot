@@ -18,9 +18,8 @@ const Login = () => {
       <div className="login-container">
         <div className="logo-section">
           <img src="/logo.svg" alt="" width="56" height="56" />
-          <p className="eyebrow">EventBuddy</p>
           <h1>Welcome back</h1>
-          <p>Sign in with your work email. Your account already knows whether you are staff, an admin, or an FDE.</p>
+          <p>Sign in with your work email to continue to your workspace.</p>
         </div>
         <LoginForm
           email={email}
@@ -30,6 +29,8 @@ const Login = () => {
         />
         <p className="login-footer">
           <Link to="/forgot-password">Forgot password?</Link>
+          <span className="login-footer-divider" aria-hidden="true">·</span>
+          <span>Need an account? <Link to="/#request-demo">Request access</Link></span>
         </p>
       </div>
       </div>

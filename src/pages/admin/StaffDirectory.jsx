@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AppLayout from '../../components/common/AppLayout';
-import { Avatar, Badge, DataTable, Modal, PageHeader, Skeleton } from '../../components/ui/kit';
+import { Avatar, Badge, DataTable, Modal, PageHeader, Skeleton, Tabs } from '../../components/ui/kit';
 import { useToast } from '../../components/ui/Toast';
 import { fetchStaff, updateStaffStatus } from '../../services/eventService';
 import { previewInvites, previewStaffImport, resendInvite } from '../../services/platformService';

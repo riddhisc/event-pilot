@@ -42,36 +42,60 @@ const Networking = () => {
     <AppLayout role="staff">
       <PageHeader
         title="Networking"
-        actions={currentUser && <QRCodeGenerator data={currentUser} label="My QR code" />}
       />
-      <div className="table-toolbar">
-        <input aria-label="Search people" placeholder="Search" value={query} onChange={(event) => { setQuery(event.target.value); update('q', event.target.value); }} />
-        <select aria-label="Department" value={department} onChange={(event) => { setDepartment(event.target.value); update('department', event.target.value); }}>
-          <option value="">Department</option>
-          {departments.map((item) => <option key={item}>{item}</option>)}
-        </select>
-        <select aria-label="Shared interest" value={interest} onChange={(event) => { setInterest(event.target.value); update('interest', event.target.value); }}>
-          <option value="">Shared interest</option>
-          {interests.map((item) => <option key={item}>{item}</option>)}
-        </select>
-        <select aria-label="Sort" value={sort} onChange={(event) => { setSort(event.target.value); update('sort', event.target.value); }}><option value="score">Best match</option><option value="name">Name</option></select>
-        <label className="chip"><input type="checkbox" checked={sameEvent} onChange={(event) => { setSameEvent(event.target.checked); update('sameEvent', event.target.checked ? '1' : ''); }} /> Attended same event</label>
-        {(query || department || interest || sameEvent) && <button type="button" className="btn btn-ghost" onClick={() => { setQuery(''); setDepartment(''); setInterest(''); setSameEvent(false); setParams({}); }}>Clear filters</button>}
-      </div>
-      <p className="muted">{visible.length} people</p>
-      {suggestions.isLoading ? <Skeleton /> : visible.length === 0 ? <EmptyState title="No suggestions match" /> : visible.map((person) => (
-        <article key={person.id} className="card event-card">
-          <h2><Avatar name={person.name} /> {person.name}</h2>
-          <p>{person.title} · {person.department}</p>
-          <div className="chip-row">
-            {(person.reasons || []).map((reason) => <span key={reason} className="chip">{reason}</span>)}
-            <span className="chip">Match {person.score}</span>
+      <section className="networking-hero">
+        <div className="networking-intro">
+          <p className="eyebrow">Build your circle</p>
+          <h2>Meet people who share your interests.</h2>
+          <p>Discover colleagues across your workspace, compare shared interests, and start a conversation.</p>
+        </div>
+        {currentUser && (
+          <div className="networking-qr-card">
+            <div>
+              <p className="eyebrow">Share your profile</p>
+              <h3>Connect in person</h3>
+              <p className="muted">Let someone scan your QR code to exchange contact details.</p>
+            </div>
+            <QRCodeGenerator data={currentUser} label="My QR code" />
           </div>
-          <button type="button" className="btn" disabled={busy === person.id || person.connection === 'connected'} onClick={() => connect(person)}>
-            {busy === person.id ? 'Sending...' : person.connection === 'connected' ? 'Connected' : person.connection === 'requested' ? 'Requested' : 'Connect'}
-          </button>
-        </article>
-      ))}
+        )}
+      </section>
+      <section className="networking-panel" aria-label="Find connections">
+        <div className="networking-panel-header">
+          <div><h2>Find connections</h2><p className="muted">Filter suggestions by team, interests, or shared events.</p></div>
+          <span className="badge">{visible.length} {visible.length === 1 ? 'match' : 'matches'}</span>
+        </div>
+        <div className="table-toolbar networking-filters">
+          <input aria-label="Search people" placeholder="Search by name or role" value={query} onChange={(event) => { setQuery(event.target.value); update('q', event.target.value); }} />
+          <select aria-label="Department" value={department} onChange={(event) => { setDepartment(event.target.value); update('department', event.target.value); }}>
+            <option value="">All departments</option>
+            {departments.map((item) => <option key={item}>{item}</option>)}
+          </select>
+          <select aria-label="Shared interest" value={interest} onChange={(event) => { setInterest(event.target.value); update('interest', event.target.value); }}>
+            <option value="">All interests</option>
+            {interests.map((item) => <option key={item}>{item}</option>)}
+          </select>
+          <select aria-label="Sort" value={sort} onChange={(event) => { setSort(event.target.value); update('sort', event.target.value); }}><option value="score">Best match</option><option value="name">Name</option></select>
+          <label className="chip"><input type="checkbox" checked={sameEvent} onChange={(event) => { setSameEvent(event.target.checked); update('sameEvent', event.target.checked ? '1' : ''); }} /> Attended same event</label>
+          {(query || department || interest || sameEvent) && <button type="button" className="btn btn-ghost" onClick={() => { setQuery(''); setDepartment(''); setInterest(''); setSameEvent(false); setParams({}); }}>Clear filters</button>}
+        </div>
+      </section>
+      {suggestions.isLoading ? <Skeleton /> : visible.length === 0 ? <EmptyState title="No suggestions match" /> : (
+        <div className="networking-results">
+          {visible.map((person) => (
+            <article key={person.id} className="card networking-person-card">
+              <div className="networking-person-heading"><Avatar name={person.name} /><div><h2>{person.name}</h2><p>{person.title}</p></div><span className="match-score">{person.score}%</span></div>
+              <p className="muted">{person.department}</p>
+              <div className="chip-row">
+                {(person.reasons || []).map((reason) => <span key={reason} className="chip">{reason}</span>)}
+              </div>
+              <button type="button" className="btn networking-connect" disabled={busy === person.id || person.connection === 'connected'} onClick={() => connect(person)}>
+                {busy === person.id ? 'Sending...' : person.connection === 'connected' ? 'Connected' : person.connection === 'requested' ? 'Requested' : 'Connect'}
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
     </AppLayout>
   );
 };
