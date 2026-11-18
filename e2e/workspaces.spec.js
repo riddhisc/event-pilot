@@ -14,7 +14,7 @@ test('admin events, staff RSVP, and FDE clients render with demo accounts', asyn
 
   await signInAs(page, 'Staff');
   await page.goto('/staff/dashboard');
-  await expect(page.getByRole('heading', { name: 'Staff dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   await page.getByRole('link', { name: 'View details' }).first().click();
   await expect(page.getByRole('heading', { name: 'RSVP' })).toBeVisible();
 
