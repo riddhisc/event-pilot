@@ -6,9 +6,9 @@ export function eventToIcs(event) {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//EventBuddy//EN',
+    'PRODID:-//Event Pilot//EN',
     'BEGIN:VEVENT',
-    `UID:${event.id}@eventbuddy`,
+    `UID:${event.id}@event-pilot`,
     `DTSTAMP:${icsStamp(new Date().toISOString())}`,
     `DTSTART:${icsStamp(event.starts_at)}`,
     `DTEND:${icsStamp(event.ends_at)}`,

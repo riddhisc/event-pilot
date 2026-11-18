@@ -4,8 +4,8 @@ import { endImpersonation, impersonateUser } from '../services/platformService';
 
 export const AuthContext = createContext(null);
 
-const ACTOR_KEY = 'eventbuddy.actor';
-const IMPERSONATION_KEY = 'eventbuddy.impersonation';
+const ACTOR_KEY = 'eventpilot.actor';
+const IMPERSONATION_KEY = 'eventpilot.impersonation';
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);

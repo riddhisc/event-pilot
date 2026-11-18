@@ -103,7 +103,7 @@ const Navbar = () => {
         <IconButton className="nav-toggle" label="Open navigation" onClick={toggleSidebar}><Menu size={18} /></IconButton>
         <Link to={homeFor(currentUser)} className="navbar-logo">
           <img src="/logo.svg" alt="" width="32" height="32" />
-          <span>EventBuddy</span>
+          <span>Event Pilot</span>
         </Link>
         {currentUser?.role === 'fde' ? <ClientSwitcher /> : (
           <div className="workspace-context" aria-label={`Workspace: ${company?.name || 'Not selected'}`}>

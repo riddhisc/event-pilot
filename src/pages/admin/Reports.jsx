@@ -36,7 +36,7 @@ const Reports = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'eventbuddy-reports.csv';
+    link.download = 'event-pilot-reports.csv';
     link.click();
     URL.revokeObjectURL(url);
     push({ title: 'CSV exported' });

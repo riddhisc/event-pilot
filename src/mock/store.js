@@ -262,7 +262,7 @@ let events = [
   },
 ];
 
-const EVENTS_STORAGE_KEY = 'eventbuddy.mock.events';
+const EVENTS_STORAGE_KEY = 'eventpilot.mock.events';
 try {
   const savedEvents = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem(EVENTS_STORAGE_KEY) || 'null') : null;
   if (Array.isArray(savedEvents)) events = savedEvents;
@@ -362,7 +362,7 @@ let deliveries = [
     id: 'wh-1',
     tenant_id: 'tenant-northwind',
     event: 'rsvp.created',
-    endpoint: 'https://example.invalid/eventbuddy',
+    endpoint: 'https://example.invalid/event-pilot',
     status_code: 500,
     attempts: 2,
     last_attempt_at: atOffset(-1, 16, 0),

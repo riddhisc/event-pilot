@@ -7,7 +7,7 @@ import { buildAttentionItems } from '../utils/attentionRules';
 
 function sessionUser() {
   try {
-    return JSON.parse(localStorage.getItem('eventbuddy.session') || 'null');
+    return JSON.parse(localStorage.getItem('eventpilot.session') || 'null');
   } catch {
     return null;
   }

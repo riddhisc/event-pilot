@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['logo.svg', 'hero-image.png'],
       manifest: {
-        name: 'EventBuddy',
-        short_name: 'EventBuddy',
-        description: 'Office events for every team.',
+        name: 'Event Pilot',
+        short_name: 'Event Pilot',
+        description: 'Plan. Track. Connect. Make every company event effortless.',
         theme_color: '#4F46E5',
         background_color: '#F7F7F8',
         display: 'standalone',

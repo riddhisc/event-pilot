@@ -6,7 +6,7 @@ import { queryClient } from './lib/queryClient';
 import './index.css';
 import './assets/styles/global.css';
 
-const theme = localStorage.getItem('eventbuddy.theme') || 'light';
+const theme = localStorage.getItem('eventpilot.theme') || 'light';
 document.documentElement.dataset.theme = theme;
 
 createRoot(document.getElementById('root')).render(

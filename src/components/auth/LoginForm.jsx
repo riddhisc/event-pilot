@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { isSupabaseConfigured } from '../../lib/env';
 
 const BYPASS = [
@@ -81,8 +82,12 @@ const LoginForm = ({ email, onEmailChange, onLoginSuccess, login }) => {
       </div>
       <div className="form-group">
         <label htmlFor="password">Password</label>
-        <input id="password" data-testid="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-        <button type="button" className="btn btn-ghost" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Hide password' : 'Show password'}</button>
+        <div className="password-field">
+          <input id="password" data-testid="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <button type="button" className="password-toggle" aria-label={showPassword ? 'Hide password' : 'Show password'} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((value) => !value)}>
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          </button>
+        </div>
         {fieldErrors.password && <p className="error-message" role="alert">{fieldErrors.password}</p>}
       </div>
       <button type="submit" className="btn btn-block" data-testid="login-submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>

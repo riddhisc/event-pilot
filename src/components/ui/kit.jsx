@@ -16,7 +16,7 @@ export function PageHeader({ title, eyebrow, actions, crumbs = [] }) {
   const location = useLocation();
   const resolvedCrumbs = crumbs.length > 0 ? crumbs : getRouteCrumbs(location.pathname);
   useEffect(() => {
-    document.title = title ? `${title} · EventBuddy` : 'EventBuddy';
+    document.title = title ? `${title} · Event Pilot` : 'Event Pilot';
   }, [title]);
 
   return (

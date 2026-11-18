@@ -274,7 +274,8 @@ img { max-width: 100%; height: auto; }
   height: 100%;
   justify-content: safe center;
   overflow: auto;
-  padding: 1rem 1.75rem;
+  padding: 2rem 3rem;
+  background: #f4f6f8;
 }
 
 .login-page p,
@@ -285,11 +286,16 @@ img { max-width: 100%; height: auto; }
 
 .login-page .login-container {
   gap: 0.55rem;
-  padding: 0;
+  padding: 2.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 22px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
 }
 
 .login-page .btn {
   min-height: 2.4rem;
+  border-radius: 10px;
 }
 
 .login-page .logo-section {
@@ -299,14 +305,14 @@ img { max-width: 100%; height: auto; }
 }
 
 .login-page .logo-section img {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   flex: none;
 }
 
 .login-page .logo-section h1 {
-  font-size: 2rem;
+  font-size: 1.85rem;
 }
 
 .login-page:not(:has(.brand-red)) {
@@ -331,8 +337,57 @@ img { max-width: 100%; height: auto; }
 .login-page .login-form .form-group label { margin: 0; }
 .login-page .login-form input { min-height: 2.85rem; }
 .login-page .login-footer { margin-top: 0.25rem; text-align: center; }
+.login-page .login-form input { border-radius: 9px; background: var(--background-color); }
+.login-page .login-form .btn-ghost { background: transparent; }
+.login-page .login-footer { color: var(--muted); font-size: 0.9rem; }
+.login-page .login-footer-divider { margin: 0 0.15rem; }
+.password-field { position: relative; }
+.password-field input { padding-right: 3rem; }
+.password-toggle { position: absolute; top: 50%; right: 0.55rem; display: inline-grid; place-items: center; width: 2rem; height: 2rem; transform: translateY(-50%); border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.password-toggle:hover { color: var(--text-color); background: var(--primary-tint); }
 .login-footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.45rem; }
 .login-footer-divider { color: var(--muted); }
+
+.login-page .brand-red { background: #101827; position: relative; overflow: hidden; }
+.login-page .brand-red::before { content: ''; position: absolute; inset: 12% 10% auto auto; width: 28rem; height: 28rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; box-shadow: 0 0 0 3rem rgba(255,255,255,0.025), 0 0 0 6rem rgba(255,255,255,0.018); }
+.login-brand-panel { display: grid; justify-items: center; gap: 1.5rem; position: relative; z-index: 1; }
+.login-page .mark-tile { width: 220px; border-radius: 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.24); }
+.login-page .mark-tile img { width: 58%; }
+.login-brand-copy { display: grid; gap: 0.3rem; text-align: center; color: #fff; }
+.login-brand-copy strong { font-size: 1.25rem; letter-spacing: -0.02em; }
+.login-brand-copy span { color: #aab4c4; font-size: 0.92rem; }
+
+/* Focused sign-in layout: keep the authentication task simple and distraction-free. */
+.login-page { min-height: 100dvh; height: auto; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 2rem; background: #f4f6f8; }
+.login-page .brand-blush { width: 100%; min-height: auto; height: auto; padding: 0; background: transparent; overflow: visible; }
+.login-page .login-container { width: min(440px, 100%); margin: 0 auto; padding: 2.25rem; }
+.login-page .brand-red { display: none; }
+.login-brand { display: inline-flex; align-items: center; gap: 0.65rem; }
+.login-brand strong { color: var(--text-color); font-size: 1rem; letter-spacing: -0.01em; }
+.login-page .logo-section { gap: 0.65rem; }
+.login-page .logo-section h1 { font-size: clamp(1.8rem, 4vw, 2.15rem); margin-top: 0.35rem; }
+.login-page .product-tagline { margin: 0; font-size: 0.72rem; letter-spacing: 0.12em; }
+.login-page .login-form { gap: 0.85rem; }
+.login-page .login-form .btn { min-height: 2.7rem; }
+
+/* Split-screen sign-in: keep the original spacious composition with a softer brand panel. */
+.login-page { min-height: 100dvh; height: 100dvh; display: grid; grid-template-columns: 1.1fr 0.9fr; align-items: stretch; padding: 0; overflow: hidden; background: var(--background-color); }
+.login-page .brand-blush { min-height: 0; height: 100%; display: flex; justify-content: center; align-items: center; padding: 2rem 3rem; background: #f4f6f8; overflow: auto; }
+.login-page .login-container { width: min(460px, 100%); margin: auto; padding: 0; background: transparent; border: 0; box-shadow: none; }
+.login-page .brand-red { display: grid; position: relative; place-items: center; overflow: hidden; background: linear-gradient(145deg, #625bea 0%, #4941d5 55%, #3f38bd 100%); }
+.login-page .brand-red::before { content: ''; position: absolute; width: 34rem; height: 34rem; border: 1px solid rgba(255,255,255,0.16); border-radius: 50%; box-shadow: 0 0 0 3rem rgba(255,255,255,0.05), 0 0 0 6rem rgba(255,255,255,0.035); }
+.login-brand-panel { display: grid; justify-items: center; gap: 1.4rem; position: relative; z-index: 1; }
+.login-page .mark-tile { width: 270px; aspect-ratio: 1; border-radius: 30px; background: #fff; box-shadow: 0 24px 55px rgba(35, 30, 130, 0.22); }
+.login-page .mark-tile img { width: 58%; }
+.login-brand-copy { display: grid; gap: 0.35rem; color: #fff; text-align: center; }
+.login-brand-copy strong { font-size: 1.35rem; letter-spacing: -0.02em; }
+.login-brand-copy span { color: rgba(255,255,255,0.82); font-size: 0.95rem; }
+
+@media (max-width: 800px) {
+  .login-page { display: block; height: auto; min-height: 100dvh; overflow: visible; }
+  .login-page .brand-blush { min-height: 100dvh; height: auto; padding: 2rem 1.25rem; }
+  .login-page .brand-red { display: none; }
+}
 
 .login-tabs { display: flex; gap: 0.5rem; }
 
@@ -510,6 +565,9 @@ th, td { border-bottom: 1px solid var(--border-color); text-align: left; padding
 .page-header { justify-content: space-between; margin-bottom: 1rem; }
 
 .dashboard-content h1 { margin-top: 0; }
+.product-tagline { margin: -0.5rem 0 0.25rem; color: var(--primary); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.go-top-button { position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 20; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.7rem; padding: 0.55rem 0.85rem; border: 1px solid var(--border-color); border-radius: 999px; background: var(--card-bg); color: var(--text-color); box-shadow: var(--shadow); font: inherit; font-weight: 750; cursor: pointer; }
+.go-top-button:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-2px); }
 
 @media (max-width: 800px) {
   .menu-button { display: inline-flex; }

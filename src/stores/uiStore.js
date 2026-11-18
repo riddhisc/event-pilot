@@ -2,14 +2,14 @@ import { create } from 'zustand';
 
 const storedTheme = typeof localStorage === 'undefined'
   ? 'light'
-  : (localStorage.getItem('eventbuddy.theme') || 'light');
+  : (localStorage.getItem('eventpilot.theme') || 'light');
 
 export const useUiStore = create((set) => ({
   theme: storedTheme,
   sidebarOpen: true,
   clientId: 'tenant-northwind',
   setTheme: (theme) => {
-    localStorage.setItem('eventbuddy.theme', theme);
+    localStorage.setItem('eventpilot.theme', theme);
     document.documentElement.dataset.theme = theme;
     set({ theme });
   },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun } from 'lucide-react';
+import { ArrowUp, Moon, Sun } from 'lucide-react';
 import { BarChart3, CalendarDays, Network, Workflow } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { useUiStore } from '../stores/uiStore';
@@ -12,9 +12,14 @@ const LandingPage = () => {
   const setTheme = useUiStore((state) => state.setTheme);
   const [form, setForm] = useState({ name: '', email: '', company: '' });
   const [sent, setSent] = useState(false);
+  const [showTopButton, setShowTopButton] = useState(false);
 
   useEffect(() => {
-    document.title = 'EventBuddy';
+    document.title = 'Event Pilot';
+    const onScroll = () => setShowTopButton(window.scrollY > 420);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
@@ -22,7 +27,7 @@ const LandingPage = () => {
       <header className="landing-header">
         <Link to="/" className="logo">
           <img src="/logo.svg" alt="" width="36" height="36" />
-          <span>EventBuddy</span>
+          <span>Event Pilot</span>
         </Link>
         <nav aria-label="Landing" className="form-actions">
           <IconButton label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
@@ -62,7 +67,7 @@ const LandingPage = () => {
         </div>
       </section>
       <section className="proof-section">
-        <p className="eyebrow">Teams using EventBuddy</p>
+        <p className="eyebrow">Teams using Event Pilot</p>
         <div className="chip-row">
           <span className="chip">Northwind Offices</span>
           <span className="chip">Contoso Labs</span>
@@ -96,9 +101,17 @@ const LandingPage = () => {
           <details><summary>What is the setup console?</summary><p>It is the onboarding workspace for connecting a new company.</p></details>
         </div>
       </section>
-      <footer className="landing-footer">
-        <Link to="/login">Sign in</Link>
-      </footer>
+      {showTopButton && (
+        <button
+          type="button"
+          className="go-top-button"
+          aria-label="Go to top"
+          title="Go to top"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <ArrowUp size={18} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 };

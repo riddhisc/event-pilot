@@ -1,9 +1,9 @@
 import { isSupabaseConfigured } from '../lib/env';
 import { supabase } from '../lib/supabaseClient';
 
-const SESSION_KEY = 'eventbuddy.session';
-const RESET_KEY = 'eventbuddy.reset';
-const OVERRIDE_KEY = 'eventbuddy.mockPasswords';
+const SESSION_KEY = 'eventpilot.session';
+const RESET_KEY = 'eventpilot.reset';
+const OVERRIDE_KEY = 'eventpilot.mockPasswords';
 
 function account(emailKey, passwordKey, profile) {
   return {

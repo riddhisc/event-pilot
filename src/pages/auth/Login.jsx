@@ -9,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   useEffect(() => {
-    document.title = 'Sign in · EventBuddy';
+    document.title = 'Sign in · Event Pilot';
   }, []);
 
   return (
@@ -17,7 +17,11 @@ const Login = () => {
       <div className="brand-blush">
       <div className="login-container">
         <div className="logo-section">
-          <img src="/logo.svg" alt="" width="56" height="56" />
+          <div className="login-brand">
+            <img src="/logo.svg" alt="" width="40" height="40" />
+            <strong>Event Pilot</strong>
+          </div>
+          <p className="product-tagline">Plan. Track. Connect.</p>
           <h1>Welcome back</h1>
           <p>Sign in with your work email to continue to your workspace.</p>
         </div>
@@ -35,8 +39,14 @@ const Login = () => {
       </div>
       </div>
       <aside className="brand-red" aria-hidden="true">
-        <div className="mark-tile">
-          <img src="/logo.svg" alt="" />
+        <div className="login-brand-panel">
+          <div className="mark-tile">
+            <img src="/logo.svg" alt="" />
+          </div>
+          <div className="login-brand-copy">
+            <strong>Event Pilot</strong>
+            <span>Plan. Track. Connect.</span>
+          </div>
         </div>
       </aside>
     </div>

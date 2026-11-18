@@ -6,13 +6,13 @@ import { homeFor } from '../lib/roles';
 const NotFound = () => {
   const { currentUser } = useAuth();
   useEffect(() => {
-    document.title = 'Page not found · EventBuddy';
+    document.title = 'Page not found · Event Pilot';
   }, []);
   return (
     <main className="login-page">
       <div className="login-container">
         <h1>Page not found</h1>
-        <p>That address is not part of EventBuddy.</p>
+        <p>That address is not part of Event Pilot.</p>
         <Link className="btn" to={homeFor(currentUser)}>Back home</Link>
       </div>
     </main>
